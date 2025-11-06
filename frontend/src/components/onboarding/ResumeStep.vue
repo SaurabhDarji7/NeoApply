@@ -10,79 +10,20 @@
 
     <!-- File Upload (shown when no resume is uploaded) -->
     <div v-if="!uploadedResumeId && !uploading" class="max-w-2xl mx-auto">
-      <div
-        @drop.prevent="handleDrop"
-        @dragover.prevent="dragover = true"
-        @dragleave.prevent="dragover = false"
-        class="border-2 border-dashed rounded-lg p-12 text-center transition-colors"
-        :class="{
-          'border-blue-400 bg-blue-50': dragover,
-          'border-gray-300 hover:border-gray-400': !dragover
-        }"
-      >
-        <div class="flex flex-col items-center">
-          <svg class="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-            />
-          </svg>
+      <FileUpload
+        ref="fileUploadRef"
+        accepted-types=".docx"
+        @file-selected="uploadFile"
+      />
 
-          <div class="mb-4">
-            <label
-              for="resume-upload"
-              class="cursor-pointer text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Click to upload
-            </label>
-            <span class="text-gray-600"> or drag and drop</span>
-            <input
-              id="resume-upload"
-              ref="fileInput"
-              type="file"
-              accept=".docx"
-              @change="handleFileSelect"
-              class="hidden"
-            />
-          </div>
-
-          <p class="text-sm text-gray-500">DOCX files only (Max 10MB)</p>
-        </div>
-      </div>
-
-      <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-md p-4">
-        <div class="flex">
-          <svg class="w-5 h-5 text-yellow-400 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fill-rule="evenodd"
-              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          <div>
-            <p class="text-sm text-yellow-800 font-medium">Note: Only DOCX format is supported</p>
-            <p class="text-xs text-yellow-700 mt-1">
-              If you have a PDF resume, please convert it to DOCX format first.
-            </p>
-          </div>
-        </div>
-      </div>
+      <Alert
+        type="warning"
+        message="Note: Only DOCX format is supported. If you have a PDF resume, please convert it to DOCX format first."
+        class="mt-6"
+      />
 
       <!-- Error Display -->
-      <div v-if="errorMessage" class="mt-4 bg-red-50 border border-red-200 rounded-md p-4">
-        <div class="flex">
-          <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fill-rule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          <p class="text-sm text-red-800">{{ errorMessage }}</p>
-        </div>
-      </div>
+      <Alert type="error" :message="errorMessage" class="mt-4" />
     </div>
 
     <!-- Uploading/Parsing State -->
@@ -95,21 +36,11 @@
 
     <!-- Resume Parsed Successfully -->
     <div v-if="uploadedResumeId && resumeData && !uploading && !parsing" class="max-w-4xl mx-auto">
-      <div class="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
-        <div class="flex items-center">
-          <svg class="w-6 h-6 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fill-rule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          <div>
-            <p class="text-sm font-medium text-green-800">Resume uploaded and parsed successfully!</p>
-            <p class="text-xs text-green-700 mt-1">Review the extracted information below.</p>
-          </div>
-        </div>
-      </div>
+      <Alert
+        type="success"
+        message="Resume uploaded and parsed successfully! Review the extracted information below."
+        class="mb-6"
+      />
 
       <!-- Parsed Data Display (simplified) -->
       <div class="bg-white border rounded-lg p-6 space-y-4">
@@ -180,15 +111,18 @@
 <script>
 import { resumeService } from '@/services/resumeService'
 import FeatureLoadingState from '../common/FeatureLoadingState.vue'
+import FileUpload from '../common/FileUpload.vue'
+import Alert from '../common/Alert.vue'
 
 export default {
   name: 'ResumeStep',
   components: {
-    FeatureLoadingState
+    FeatureLoadingState,
+    FileUpload,
+    Alert
   },
   data() {
     return {
-      dragover: false,
       uploading: false,
       parsing: false,
       uploadedResumeId: null,
@@ -200,33 +134,7 @@ export default {
     }
   },
   methods: {
-    handleDrop(event) {
-      this.dragover = false
-      const files = event.dataTransfer.files
-
-      if (files.length > 0) {
-        this.uploadFile(files[0])
-      }
-    },
-    handleFileSelect(event) {
-      const files = event.target.files
-      if (files.length > 0) {
-        this.uploadFile(files[0])
-      }
-    },
     async uploadFile(file) {
-      // Validate file type
-      if (!file.name.endsWith('.docx')) {
-        this.errorMessage = 'Only DOCX files are supported. Please upload a .docx file.'
-        return
-      }
-
-      // Validate file size (10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        this.errorMessage = 'File size must be less than 10MB.'
-        return
-      }
-
       this.errorMessage = ''
       this.uploading = true
       this.statusText = 'Uploading'
@@ -300,7 +208,9 @@ export default {
       this.resumeData = null
       this.errorMessage = ''
       this.progress = 0
-      this.$refs.fileInput.value = ''
+      if (this.$refs.fileUploadRef) {
+        this.$refs.fileUploadRef.clearFile()
+      }
     }
   },
   beforeUnmount() {
