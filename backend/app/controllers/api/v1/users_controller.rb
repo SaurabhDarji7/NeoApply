@@ -1,6 +1,8 @@
 module Api
   module V1
     class UsersController < BaseController
+      ONBOARDING_STEPS = 1..4
+
       # GET /api/v1/users/me
       def me
         render json: {
@@ -40,7 +42,7 @@ module Api
       def update_onboarding_step
         step = params[:step].to_i
 
-        if step.between?(1, 4)
+        if ONBOARDING_STEPS.include?(step)
           current_user.update_onboarding_step!(step)
           render json: {
             data: {

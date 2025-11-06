@@ -1,9 +1,9 @@
 class AutofillProfile < ApplicationRecord
   belongs_to :user
 
-  # Validations for onboarding (all required fields)
-  validates :first_name, :last_name, :email, presence: true
-  validates :phone, :country, :city, :state, presence: true, on: :onboarding
+  # All fields required for auto-fill functionality
+  validates :first_name, :last_name, :email, :phone, presence: true
+  validates :country, :city, :state, presence: true
 
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :linkedin, :github, :portfolio, format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]), message: 'must be a valid URL' }, allow_blank: true

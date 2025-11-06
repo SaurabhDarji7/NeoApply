@@ -2,13 +2,16 @@
   <WizardContainer
     :current-step="currentStep"
     :total-steps="totalSteps"
-    :can-proceed="canProceed"
+    :can-proceed="canProceed && !saving"
     :show-skip="showSkip"
     @next="handleNext"
     @prev="handlePrev"
     @skip="handleSkip"
     @complete="handleComplete"
   >
+    <!-- Global Error Display -->
+    <Alert v-if="error" type="error" :message="error" class="mb-6" />
+
     <!-- Step 1: Welcome -->
     <WelcomeStep v-if="currentStep === 1" />
 
@@ -43,6 +46,7 @@ import WelcomeStep from '@/components/onboarding/WelcomeStep.vue'
 import ProfileStep from '@/components/onboarding/ProfileStep.vue'
 import ResumeStep from '@/components/onboarding/ResumeStep.vue'
 import CompletionStep from '@/components/onboarding/CompletionStep.vue'
+import Alert from '@/components/common/Alert.vue'
 
 export default {
   name: 'OnboardingView',
@@ -51,7 +55,8 @@ export default {
     WelcomeStep,
     ProfileStep,
     ResumeStep,
-    CompletionStep
+    CompletionStep,
+    Alert
   },
   data() {
     return {
