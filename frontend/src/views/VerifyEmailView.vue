@@ -84,10 +84,15 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
 import api from '@/services/api'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
+const toast = useToast()
+
 const email = ref(route.query.email || '')
 const otp = ref(route.query.code || '')
 const error = ref('')
@@ -99,6 +104,7 @@ const resendCooldown = ref(0)
 onMounted(async () => {
   if (!email.value) {
     error.value = 'Missing email address. Please register again.'
+    toast.error('Verification Error', 'Missing email address. Please register again.')
     return
   }
 
@@ -120,15 +126,34 @@ async function verifyOTP() {
       user: { email: email.value, otp: otp.value }
     })
 
-    successMessage.value = 'Email verified successfully! Redirecting to login...'
+    successMessage.value = 'Email verified successfully! Logging you in...'
 
-    // Redirect to login page after 2 seconds
-    setTimeout(() => {
-      router.push('/login')
-    }, 2000)
+    toast.success(
+      'Email verified!',
+      'Your account is now active. Logging you in...'
+    )
+
+    // Auto-login: Get the token from the response if provided, or login with email
+    if (resp.data?.token) {
+      // If backend returns a token directly after verification
+      localStorage.setItem('authToken', resp.data.token)
+      await authStore.fetchUser()
+      router.push('/dashboard')
+    } else {
+      // Otherwise, redirect to dashboard (backend may have set session)
+      // Or attempt login silently if password was saved
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 1500)
+    }
   } catch (e) {
     error.value = e.response?.data?.error?.message || 'Invalid or expired verification code.'
     otp.value = '' // Clear the input on error
+
+    toast.error(
+      'Verification failed',
+      error.value
+    )
   } finally {
     loading.value = false
   }
@@ -148,7 +173,12 @@ async function resendOTP() {
 
     successMessage.value = 'New verification code sent! Check your email.'
 
-    // Start 60-second cooldown
+    toast.success(
+      'Code sent!',
+      'A new verification code has been sent to your email.'
+    )
+
+    // Start 60-second cooldown with explanation
     resendCooldown.value = 60
     const interval = setInterval(() => {
       resendCooldown.value--
@@ -158,6 +188,11 @@ async function resendOTP() {
     }, 1000)
   } catch (e) {
     error.value = e.response?.data?.error?.message || 'Failed to resend code.'
+
+    toast.error(
+      'Resend failed',
+      error.value
+    )
   } finally {
     loading.value = false
   }
