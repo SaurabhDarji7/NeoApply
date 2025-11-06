@@ -15,22 +15,28 @@
 
       <!-- Resume Detail -->
       <div v-else-if="resume">
+        <!-- Breadcrumb Navigation -->
+        <div class="mb-6">
+          <Breadcrumb
+            :items="[
+              { label: 'Dashboard', path: '/dashboard' },
+              { label: 'Resumes', path: '/resumes' },
+              { label: resume.name }
+            ]"
+            show-home
+          />
+        </div>
+
         <!-- Header -->
         <div class="mb-6">
-          <router-link to="/resumes" class="text-primary hover:text-blue-700 flex items-center mb-4">
-            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to Resumes
-          </router-link>
           <div class="flex justify-between items-start">
             <div>
-              <h1 class="text-3xl font-bold text-gray-900">{{ resume.name }}</h1>
+              <h1 class="text-3xl font-extrabold text-gray-900">{{ resume.name }}</h1>
               <p class="text-gray-600 mt-1">Uploaded {{ formatDate(resume.created_at) }}</p>
             </div>
-            <span :class="statusClass(resume.status)" class="px-3 py-1 text-sm font-semibold rounded-full">
+            <BaseBadge :variant="getStatusVariant(resume.status)" size="lg">
               {{ resume.status }}
-            </span>
+            </BaseBadge>
           </div>
         </div>
 
@@ -56,29 +62,31 @@
             </div>
           </div>
 
-          <div class="mt-6 flex space-x-4">
-            <a
+          <div class="mt-6 flex flex-wrap gap-3">
+            <BaseButton
               v-if="resume.file"
-              :href="getDownloadUrl(resume.id)"
-              target="_blank"
-              class="btn flex items-center space-x-2"
+              variant="primary"
+              @click="handleDownload"
+              aria-label="Download resume file"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
               <span>Download</span>
-            </a>
-            <button
+            </BaseButton>
+            <BaseButton
               v-if="resume.status === 'processing' || resume.status === 'pending'"
+              variant="outline"
               @click="refreshStatus"
-              class="btn-secondary flex items-center space-x-2"
-              :disabled="refreshing"
+              :loading="refreshing"
+              loading-text="Checking..."
+              aria-label="Refresh parsing status"
             >
-              <svg class="w-5 h-5" :class="{ 'animate-spin': refreshing }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-if="!refreshing" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              <span>{{ refreshing ? 'Checking...' : 'Refresh Status' }}</span>
-            </button>
+              <span>Refresh Status</span>
+            </BaseButton>
           </div>
         </div>
 
@@ -189,10 +197,15 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useResumeStore } from '@/stores/resume'
+import { useToast } from '@/composables/useToast'
 import resumeService from '@/services/resumeService'
+import Breadcrumb from '@/components/ui/Breadcrumb.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseBadge from '@/components/ui/BaseBadge.vue'
 
 const route = useRoute()
 const resumeStore = useResumeStore()
+const toast = useToast()
 
 const refreshing = ref(false)
 
@@ -209,6 +222,10 @@ const loadResume = async () => {
     await resumeStore.fetchResume(route.params.id)
   } catch (err) {
     console.error('Failed to load resume:', err)
+    toast.error(
+      'Failed to load resume',
+      'Please try again or contact support if the problem persists.'
+    )
   }
 }
 
@@ -216,10 +233,50 @@ const refreshStatus = async () => {
   refreshing.value = true
   try {
     await resumeStore.checkStatus(route.params.id)
+
+    const updatedResume = resumeStore.currentResume
+    if (updatedResume.status === 'parsed') {
+      toast.success(
+        'Parsing complete!',
+        'Your resume has been successfully parsed.'
+      )
+    } else if (updatedResume.status === 'failed') {
+      toast.error(
+        'Parsing failed',
+        updatedResume.error_message || 'An error occurred during parsing.'
+      )
+    } else {
+      toast.info(
+        'Status updated',
+        `Current status: ${updatedResume.status}`
+      )
+    }
   } catch (err) {
     console.error('Failed to refresh status:', err)
+    toast.error(
+      'Failed to refresh status',
+      'Please try again.'
+    )
   } finally {
     refreshing.value = false
+  }
+}
+
+const handleDownload = () => {
+  try {
+    const url = getDownloadUrl(resume.value.id)
+    window.open(url, '_blank')
+
+    toast.success(
+      'Download started',
+      `Downloading ${resume.value.file.filename}`
+    )
+  } catch (err) {
+    console.error('Download failed:', err)
+    toast.error(
+      'Download failed',
+      'Please try again or contact support.'
+    )
   }
 }
 
@@ -227,18 +284,33 @@ const getDownloadUrl = (id) => {
   return resumeService.getDownloadUrl(id)
 }
 
-const statusClass = (status) => {
-  const classes = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    processing: 'bg-blue-100 text-blue-800',
-    parsed: 'bg-green-100 text-green-800',
-    failed: 'bg-red-100 text-red-800'
+const getStatusVariant = (status) => {
+  const variants = {
+    pending: 'warning',
+    processing: 'info',
+    parsed: 'success',
+    failed: 'error'
   }
-  return classes[status] || 'bg-gray-100 text-gray-800'
+  return variants[status] || 'default'
 }
 
 const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffInHours = (now - date) / (1000 * 60 * 60)
+
+  // Show relative time if less than 24 hours
+  if (diffInHours < 24) {
+    if (diffInHours < 1) {
+      const minutes = Math.floor(diffInHours * 60)
+      return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`
+    }
+    const hours = Math.floor(diffInHours)
+    return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`
+  }
+
+  // Show absolute date for older items
+  return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
