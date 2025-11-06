@@ -50,13 +50,20 @@
           <button @click="loadResumes" class="btn mt-4">Retry</button>
         </div>
 
-        <div v-else-if="resumes.length === 0" class="text-center py-12">
-          <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <p class="text-gray-600 mb-4">No resumes uploaded yet</p>
-          <button @click="showUploadModal = true" class="btn">Upload Your First Resume</button>
-        </div>
+        <EmptyState
+          v-else-if="resumes.length === 0"
+          title="No resumes uploaded yet"
+          description="Upload your resume to get started with personalized job applications."
+          :action="true"
+          action-label="Upload Your First Resume"
+          @action="showUploadModal = true"
+        >
+          <template #icon>
+            <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </template>
+        </EmptyState>
 
         <div v-else class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
@@ -77,9 +84,9 @@
                   </router-link>
                 </td>
                 <td class="px-6 py-4">
-                  <span :class="statusClass(resume.status)" class="px-2 py-1 text-xs font-semibold rounded-full">
+                  <StatusTag :variant="getStatusVariant(resume.status)">
                     {{ resume.status }}
-                  </span>
+                  </StatusTag>
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-600">
                   <div v-if="resume.file">
@@ -117,64 +124,94 @@
     </div>
 
     <!-- Upload Modal -->
-    <div v-if="showUploadModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-8 max-w-2xl w-full mx-4">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-2xl font-bold text-gray-900">Upload Resume</h2>
-          <button @click="closeUploadModal" class="text-gray-500 hover:text-gray-700">
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-          </button>
+    <Modal
+      v-model="showUploadModal"
+      title="Upload Resume"
+      size="lg"
+      @close="closeUploadModal"
+    >
+      <form @submit.prevent="handleUpload">
+        <div class="mb-6">
+          <label for="resume-name" class="block text-sm font-medium text-gray-700 mb-2">
+            Resume Name
+          </label>
+          <input
+            id="resume-name"
+            v-model="uploadForm.name"
+            type="text"
+            required
+            class="input"
+            placeholder="e.g., Software Engineer Resume 2024"
+          />
         </div>
 
-        <form @submit.prevent="handleUpload">
-          <div class="mb-6">
-            <label for="resume-name" class="block text-sm font-medium text-gray-700 mb-2">
-              Resume Name
-            </label>
-            <input
-              id="resume-name"
-              v-model="uploadForm.name"
-              type="text"
-              required
-              class="input"
-              placeholder="e.g., Software Engineer Resume 2024"
-            />
-          </div>
+        <div class="mb-6">
+          <FileUpload
+            ref="fileUploadRef"
+            @file-selected="handleFileSelected"
+            @file-cleared="uploadForm.file = null"
+          />
+        </div>
 
-          <div class="mb-6">
-            <FileUpload
-              ref="fileUploadRef"
-              @file-selected="handleFileSelected"
-              @file-cleared="uploadForm.file = null"
-            />
-          </div>
+        <div v-if="uploadError" class="mb-6 rounded-md bg-red-50 p-4">
+          <p class="text-sm text-red-800">{{ uploadError }}</p>
+        </div>
+      </form>
 
-          <div v-if="uploadError" class="mb-6 rounded-md bg-red-50 p-4">
-            <p class="text-sm text-red-800">{{ uploadError }}</p>
-          </div>
+      <template #footer>
+        <div class="flex justify-end space-x-4">
+          <Button
+            variant="secondary"
+            @click="closeUploadModal"
+            :disabled="uploading"
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            @click="handleUpload"
+            :disabled="!uploadForm.file || uploading"
+            :loading="uploading"
+          >
+            Upload
+          </Button>
+        </div>
+      </template>
+    </Modal>
 
-          <div class="flex justify-end space-x-4">
-            <button
-              type="button"
-              @click="closeUploadModal"
-              class="btn-secondary"
-              :disabled="uploading"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              class="btn"
-              :disabled="!uploadForm.file || uploading"
-            >
-              {{ uploading ? 'Uploading...' : 'Upload' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <!-- Delete Confirmation Modal -->
+    <Modal
+      v-model="showDeleteModal"
+      title="Delete Resume"
+      size="sm"
+    >
+      <p class="text-gray-600">
+        Are you sure you want to delete this resume? This action cannot be undone.
+      </p>
+
+      <template #footer>
+        <div class="flex justify-end space-x-4">
+          <Button
+            variant="secondary"
+            @click="showDeleteModal = false"
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            @click="confirmDelete"
+          >
+            Delete
+          </Button>
+        </div>
+      </template>
+    </Modal>
+
+    <!-- FAB for Upload -->
+    <FAB
+      aria-label="Upload Resume"
+      @click="showUploadModal = true"
+    />
   </div>
 </template>
 
@@ -183,10 +220,20 @@ import { ref, computed, onMounted } from 'vue'
 import { useResumeStore } from '@/stores/resume'
 import resumeService from '@/services/resumeService'
 import FileUpload from '@/components/common/FileUpload.vue'
+import Button from '@/components/common/Button.vue'
+import FAB from '@/components/common/FAB.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import StatusTag from '@/components/common/StatusTag.vue'
+import Modal from '@/components/common/Modal.vue'
+import { useToast } from '@/composables/useToast'
+
+const toast = useToast()
 
 const resumeStore = useResumeStore()
 
 const showUploadModal = ref(false)
+const showDeleteModal = ref(false)
+const resumeToDelete = ref(null)
 const uploadForm = ref({
   name: '',
   file: null
@@ -226,9 +273,12 @@ const handleUpload = async () => {
 
   try {
     await resumeStore.uploadResume(uploadForm.value.file, uploadForm.value.name)
+    toast.success('Resume uploaded successfully', 'Your resume is now being processed.')
     closeUploadModal()
   } catch (err) {
-    uploadError.value = err.response?.data?.error?.message || 'Failed to upload resume'
+    const errorMessage = err.response?.data?.error?.message || 'Failed to upload resume'
+    uploadError.value = errorMessage
+    toast.error('Upload failed', errorMessage)
   } finally {
     uploading.value = false
   }
@@ -243,13 +293,21 @@ const closeUploadModal = () => {
   }
 }
 
-const handleDelete = async (id) => {
-  if (!confirm('Are you sure you want to delete this resume?')) return
+const handleDelete = (id) => {
+  resumeToDelete.value = id
+  showDeleteModal.value = true
+}
+
+const confirmDelete = async () => {
+  if (!resumeToDelete.value) return
 
   try {
-    await resumeStore.deleteResume(id)
+    await resumeStore.deleteResume(resumeToDelete.value)
+    toast.success('Resume deleted', 'The resume has been successfully deleted.')
+    showDeleteModal.value = false
+    resumeToDelete.value = null
   } catch (err) {
-    alert('Failed to delete resume')
+    toast.error('Delete failed', 'Failed to delete the resume. Please try again.')
   }
 }
 
@@ -257,14 +315,14 @@ const getDownloadUrl = (id) => {
   return resumeService.getDownloadUrl(id)
 }
 
-const statusClass = (status) => {
-  const classes = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    processing: 'bg-blue-100 text-blue-800',
-    parsed: 'bg-green-100 text-green-800',
-    failed: 'bg-red-100 text-red-800'
+const getStatusVariant = (status) => {
+  const variants = {
+    pending: 'warning',
+    processing: 'info',
+    parsed: 'success',
+    failed: 'danger'
   }
-  return classes[status] || 'bg-gray-100 text-gray-800'
+  return variants[status] || 'neutral'
 }
 
 const formatDate = (dateString) => {

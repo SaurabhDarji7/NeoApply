@@ -14,24 +14,24 @@
 
       <!-- Stats -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white rounded-lg shadow p-6">
+        <Card>
           <p class="text-sm text-gray-600 mb-1">Total Jobs</p>
           <p class="text-3xl font-bold text-gray-900">{{ jobDescriptions.length }}</p>
-        </div>
-        <div class="bg-blue-50 rounded-lg shadow p-6">
+        </Card>
+        <Card class="bg-blue-50">
           <p class="text-sm text-blue-600 mb-1">Processing</p>
           <p class="text-3xl font-bold text-blue-600">
             {{ jobDescriptionStore.statusCount('scraping') + jobDescriptionStore.statusCount('parsing') }}
           </p>
-        </div>
-        <div class="bg-green-50 rounded-lg shadow p-6">
+        </Card>
+        <Card class="bg-green-50">
           <p class="text-sm text-green-600 mb-1">Completed</p>
           <p class="text-3xl font-bold text-green-600">{{ jobDescriptionStore.statusCount('completed') }}</p>
-        </div>
-        <div class="bg-red-50 rounded-lg shadow p-6">
+        </Card>
+        <Card class="bg-red-50">
           <p class="text-sm text-red-600 mb-1">Failed</p>
           <p class="text-3xl font-bold text-red-600">{{ jobDescriptionStore.statusCount('failed') }}</p>
-        </div>
+        </Card>
       </div>
 
       <!-- Loading State -->
@@ -48,10 +48,11 @@
 
       <!-- Job List -->
       <div v-else-if="jobDescriptions.length > 0" class="space-y-4">
-        <div
+        <Card
           v-for="job in jobDescriptions"
           :key="job.id"
-          class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 cursor-pointer"
+          hoverable
+          clickable
           @click="$router.push(`/jobs/${job.id}`)"
         >
           <div class="flex justify-between items-start">
@@ -62,17 +63,12 @@
               <p class="text-gray-700 mb-2">{{ job.company_name || 'Company' }}</p>
               <p class="text-sm text-gray-600">
                 Added {{ formatDate(job.created_at) }}
-                <span v-if="job.url"> • <a :href="job.url" target="_blank" class="text-blue-600 hover:underline" @click.stop>View Original</a></span>
+                <span v-if="job.url"> • <a :href="job.url" target="_blank" class="text-primary-600 hover:underline" @click.stop>View Original</a></span>
               </p>
             </div>
-            <span
-              :class="[
-                'px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap',
-                statusColor(job.status)
-              ]"
-            >
+            <StatusTag :variant="getStatusVariant(job.status)">
               {{ formatStatus(job.status) }}
-            </span>
+            </StatusTag>
           </div>
 
           <!-- Error Message -->
@@ -95,95 +91,94 @@
               💰 {{ formatSalaryBrief(job.parsed_attributes.salary_range) }}
             </span>
           </div>
-        </div>
+        </Card>
       </div>
 
       <!-- Empty State -->
-      <div v-else class="bg-white rounded-lg shadow p-12 text-center">
-        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">No job descriptions yet</h3>
-        <p class="text-gray-600 mb-4">Add your first job description to get started</p>
-        <button
-          @click="showAddJobModal = true"
-          class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium"
-        >
-          Add Job Description
-        </button>
-      </div>
+      <EmptyState
+        v-else
+        title="No job descriptions yet"
+        description="Add your first job description to get started with tailored cover letters."
+        :action="true"
+        action-label="Add Job Description"
+        @action="showAddJobModal = true"
+      >
+        <template #icon>
+          <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </template>
+      </EmptyState>
     </div>
 
     <!-- Add Job Modal -->
-    <div v-if="showAddJobModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="closeModal">
-      <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="p-6">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-900">Add Job Description</h2>
-            <button @click="closeModal" class="text-gray-400 hover:text-gray-600">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+    <Modal
+      v-model="showAddJobModal"
+      title="Add Job Description"
+      size="lg"
+      @close="closeModal"
+    >
+      <form @submit.prevent="addJob">
+        <!-- URL Input -->
+        <Input
+          v-model="newJob.url"
+          type="url"
+          label="Job URL"
+          placeholder="https://www.linkedin.com/jobs/view/..."
+          hint="LinkedIn, Indeed, Greenhouse, etc."
+          class="mb-4"
+        />
 
-          <form @submit.prevent="addJob">
-            <!-- URL Input -->
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Job URL</label>
-              <input
-                v-model="newJob.url"
-                type="url"
-                placeholder="https://www.linkedin.com/jobs/view/..."
-                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <p class="text-xs text-gray-500 mt-1">LinkedIn, Indeed, Greenhouse, etc.</p>
-            </div>
-
-            <!-- Divider -->
-            <div class="flex items-center my-6">
-              <div class="flex-1 border-t border-gray-300"></div>
-              <span class="px-4 text-sm text-gray-500">OR</span>
-              <div class="flex-1 border-t border-gray-300"></div>
-            </div>
-
-            <!-- Raw Text Input -->
-            <div class="mb-6">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Paste Job Description</label>
-              <textarea
-                v-model="newJob.raw_text"
-                rows="8"
-                placeholder="Paste the job description text here..."
-                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              ></textarea>
-            </div>
-
-            <!-- Error Display -->
-            <div v-if="submitError" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-600">
-              {{ submitError }}
-            </div>
-
-            <!-- Buttons -->
-            <div class="flex gap-3">
-              <button
-                type="submit"
-                :disabled="submitting || (!newJob.url && !newJob.raw_text)"
-                class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {{ submitting ? 'Adding...' : 'Add Job' }}
-              </button>
-              <button
-                type="button"
-                @click="closeModal"
-                class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+        <!-- Divider -->
+        <div class="flex items-center my-6">
+          <div class="flex-1 border-t border-gray-300"></div>
+          <span class="px-4 text-sm text-gray-500">OR</span>
+          <div class="flex-1 border-t border-gray-300"></div>
         </div>
-      </div>
-    </div>
+
+        <!-- Raw Text Input -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Paste Job Description</label>
+          <textarea
+            v-model="newJob.raw_text"
+            rows="8"
+            placeholder="Paste the job description text here..."
+            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+          ></textarea>
+        </div>
+
+        <!-- Error Display -->
+        <div v-if="submitError" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-600">
+          {{ submitError }}
+        </div>
+      </form>
+
+      <template #footer>
+        <div class="flex gap-3 justify-end">
+          <Button
+            variant="secondary"
+            @click="closeModal"
+            :disabled="submitting"
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            @click="addJob"
+            :disabled="submitting || (!newJob.url && !newJob.raw_text)"
+            :loading="submitting"
+          >
+            Add Job
+          </Button>
+        </div>
+      </template>
+    </Modal>
+
+    <!-- FAB for Add Job -->
+    <FAB
+      aria-label="Add Job Description"
+      @click="showAddJobModal = true"
+    />
   </div>
 </template>
 
@@ -192,6 +187,9 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useJobDescriptionStore } from '@/stores/jobDescription'
 import LoadingStates from '@/components/common/LoadingStates.vue'
 import ErrorDisplay from '@/components/common/ErrorDisplay.vue'
+import { Card, Button, Modal, EmptyState, StatusTag, FAB, Input, useToast } from '@/components/common'
+
+const toast = useToast()
 
 const jobDescriptionStore = useJobDescriptionStore()
 
@@ -226,6 +224,7 @@ const loadJobs = async () => {
 const addJob = async () => {
   if (!newJob.value.url && !newJob.value.raw_text) {
     submitError.value = 'Please provide either a URL or paste the job description text'
+    toast.warning('Input required', submitError.value)
     return
   }
 
@@ -234,10 +233,13 @@ const addJob = async () => {
 
   try {
     await jobDescriptionStore.createJobDescription(newJob.value)
+    toast.success('Job added successfully', 'The job description is being processed.')
     closeModal()
     jobDescriptions.value = jobDescriptionStore.jobDescriptions
   } catch (err) {
-    submitError.value = err.response?.data?.error?.message || 'Failed to add job description'
+    const errorMessage = err.response?.data?.error?.message || 'Failed to add job description'
+    submitError.value = errorMessage
+    toast.error('Failed to add job', errorMessage)
   } finally {
     submitting.value = false
   }
@@ -259,16 +261,16 @@ const formatDate = (dateString) => {
   })
 }
 
-// Status color
-const statusColor = (status) => {
-  const colors = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    scraping: 'bg-purple-100 text-purple-800',
-    parsing: 'bg-blue-100 text-blue-800',
-    completed: 'bg-green-100 text-green-800',
-    failed: 'bg-red-100 text-red-800'
+// Status variant for StatusTag
+const getStatusVariant = (status) => {
+  const variants = {
+    pending: 'warning',
+    scraping: 'info',
+    parsing: 'info',
+    completed: 'success',
+    failed: 'danger'
   }
-  return colors[status] || 'bg-gray-100 text-gray-800'
+  return variants[status] || 'neutral'
 }
 
 // Format status
