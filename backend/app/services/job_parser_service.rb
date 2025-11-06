@@ -9,21 +9,17 @@ class JobParserService
     @job_description.update!(status: 'parsing')
 
     # Parse with LLM
-    result = ::LLMService.parse_job_description(@job_description.raw_text)
+    parsed_data = ::LLMService.parse_job_description(@job_description.raw_text)
 
-    # Extract the parsed data from the result wrapper
-    attributes = result[:parsed_data]
-
-    # Save to database with raw response
+    # Save to database
     @job_description.update!(
       status: 'completed',
-      title: attributes['title'] || attributes['company_name'],
-      company_name: attributes['company_name'] || attributes['company'],
-      parsed_attributes: attributes,
-      raw_llm_response: result[:raw_response]
+      title: parsed_data['title'] || parsed_data['company_name'],
+      company_name: parsed_data['company_name'] || parsed_data['company'],
+      parsed_attributes: parsed_data
     )
 
-    attributes
+    parsed_data
   rescue => e
     @job_description.update!(
       status: 'failed',

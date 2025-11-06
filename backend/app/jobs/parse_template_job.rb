@@ -22,30 +22,17 @@ class ParseTemplateJob < ApplicationJob
              end
 
       # Parse with LLM
-      result = LLMService.parse_resume(text)
+      parsed_data = LLMService.parse_resume(text)
 
-      # Handle the result
-      if result[:validation_result][:valid]
-        template.update!(
-          status: 'completed',
-          parsed_attributes: result[:parsed_data],
-          raw_llm_response: result[:raw_response],
-          completed_at: Time.current,
-          error_message: nil
-        )
+      # Save the result
+      template.update!(
+        status: 'completed',
+        parsed_attributes: parsed_data,
+        completed_at: Time.current,
+        error_message: nil
+      )
 
-        Rails.logger.info("Template #{template_id} parsed successfully on attempt #{result[:attempt]}")
-      else
-        error_message = "Parsing failed due to validation errors: #{result[:validation_result][:errors].join('; ')}"
-        template.update!(
-          status: 'failed',
-          error_message: error_message,
-          raw_llm_response: result[:raw_response],
-          completed_at: Time.current
-        )
-
-        Rails.logger.error("Template #{template_id} parsing failed: #{error_message}")
-      end
+      Rails.logger.info("Template #{template_id} parsed successfully on attempt #{template.attempt_count}")
     rescue ActiveRecord::RecordNotFound => e
       Rails.logger.error("Template #{template_id} not found: #{e.message}")
       raise e if Rails.env.development?
