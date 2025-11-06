@@ -1,0 +1,124 @@
+{
+  "manifest_version": 3,
+  "name": "NeoApply - Job Application Autofill",
+  "version": "2.0.0",
+  "description": "Autofill job applications on ANY job site with AI-powered answers and smart field detection",
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "32": "assets/icons/icon32.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "downloads"
+  ],
+  "host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "32": "assets/icons/icon32.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    }
+  },
+  "options_page": "options/options.html",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://boards.greenhouse.io/*",
+        "https://*.greenhouse.io/*"
+      ],
+      "js": ["content/greenhouse.js"],
+      "css": ["ui/panel.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://jobs.lever.co/*",
+        "https://*.lever.co/*"
+      ],
+      "js": ["content/lever.js"],
+      "css": ["ui/panel.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://*.myworkdayjobs.com/*",
+        "https://*.workday.com/*"
+      ],
+      "js": ["content/workday.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://*.icims.com/*",
+        "https://careers.*.com/*"
+      ],
+      "js": ["content/icims.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://jobs.smartrecruiters.com/*",
+        "https://*.smartrecruiters.com/*"
+      ],
+      "js": ["content/smartrecruiters.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://jobs.ashbyhq.com/*",
+        "https://*.ashbyhq.com/*"
+      ],
+      "js": ["content/ashby.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://*/*",
+        "http://*/*"
+      ],
+      "js": ["content/generic.js"],
+      "run_at": "document_idle",
+      "exclude_matches": [
+        "https://boards.greenhouse.io/*",
+        "https://*.greenhouse.io/*",
+        "https://jobs.lever.co/*",
+        "https://*.lever.co/*",
+        "https://*.myworkdayjobs.com/*",
+        "https://*.workday.com/*",
+        "https://*.icims.com/*",
+        "https://jobs.smartrecruiters.com/*",
+        "https://*.smartrecruiters.com/*",
+        "https://jobs.ashbyhq.com/*",
+        "https://*.ashbyhq.com/*"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "ui/*.html",
+        "ui/*.css",
+        "assets/*",
+        "utils/*.js",
+        "content/common.js"
+      ],
+      "matches": [
+        "https://*/*",
+        "http://*/*"
+      ]
+    }
+  ]
+}
