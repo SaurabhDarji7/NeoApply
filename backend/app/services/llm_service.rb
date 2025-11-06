@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-# Service adapter that provides a singleton interface to LLM parsing operations
 class LLMService
   def self.parse_resume(text)
     resume_parser.parse(text)

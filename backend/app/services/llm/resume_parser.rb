@@ -7,22 +7,21 @@ module LLM
     end
 
     def parse(text)
+      # Validate and truncate input if necessary
+      safe_text = Config.validate_input_length(text)
+
       # Parse with OpenAI using schema and prompt
       response = @client.chat(
-        model: 'gpt-4o-mini',
+        model: Config.model_for(:parsing),
         messages: [
           { role: 'system', content: Schemas::ResumeSchema.system_prompt },
-          { role: 'user', content: text }
+          { role: 'user', content: safe_text }
         ],
-        temperature: 0.3,
-        response_format: {
-          type: 'json_schema',
-          json_schema: {
-            name: 'resume_extraction',
-            schema: Schemas::ResumeSchema.json_schema,
-            strict: true
-          }
-        }
+        temperature: Config.temperature_for(:parsing),
+        response_format: Config.json_schema_format(
+          name: 'resume_extraction',
+          schema: Schemas::ResumeSchema.json_schema
+        )
       )
 
       parsed_data = JSON.parse(response.dig('choices', 0, 'message', 'content'))
@@ -53,14 +52,14 @@ module LLM
       LLMServiceErrorReporting.report_api_error(
         e,
         operation: 'parse_resume',
-        model: 'gpt-4o-mini'
+        model: Config.model_for(:parsing)
       )
       raise
     rescue StandardError => e
       LLMServiceErrorReporting.report_api_error(
         e,
         operation: 'parse_resume',
-        model: 'gpt-4o-mini'
+        model: Config.model_for(:parsing)
       )
       raise
     end

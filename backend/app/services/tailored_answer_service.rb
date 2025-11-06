@@ -174,35 +174,30 @@ class TailoredAnswerService
   end
 
   def call_openai(prompt, max_length)
-    unless openai_configured?
+    unless LLM::Config.api_key_configured?
       error = StandardError.new("OpenAI API key not configured")
       LLMServiceErrorReporting.report_api_error(
         error,
         operation: 'generate_tailored_answer',
-        model: 'gpt-3.5-turbo'
+        model: LLM::Config.model_for(:generation)
       )
       raise error
     end
 
-    client = OpenAI::Client.new(access_token: ENV['OPENAI_API_KEY'])
+    client = OpenAI::Client.new(access_token: LLM::Config.api_key)
 
-    # Estimate tokens (rough: 1 token ≈ 4 characters)
-    max_tokens = [(max_length || 500) / 3, 150].max.to_i
+    max_tokens = LLM::Config.calculate_max_tokens(max_length || 500)
 
     response = client.chat(
       parameters: {
-        model: 'gpt-3.5-turbo', # Using 3.5-turbo for cost efficiency
+        model: LLM::Config.model_for(:generation),
         messages: [{ role: 'user', content: prompt }],
         max_tokens: max_tokens,
-        temperature: 0.7,
-        response_format: {
-          type: 'json_schema',
-          json_schema: {
-            name: 'tailored_answer',
-            schema: tailored_answer_json_schema,
-            strict: true
-          }
-        }
+        temperature: LLM::Config.temperature_for(:generation),
+        response_format: LLM::Config.json_schema_format(
+          name: 'tailored_answer',
+          schema: tailored_answer_json_schema
+        )
       }
     )
 
@@ -239,14 +234,14 @@ class TailoredAnswerService
     LLMServiceErrorReporting.report_api_error(
       e,
       operation: 'generate_tailored_answer',
-      model: 'gpt-3.5-turbo'
+      model: LLM::Config.model_for(:generation)
     )
     raise
   rescue StandardError => e
     LLMServiceErrorReporting.report_api_error(
       e,
       operation: 'generate_tailored_answer',
-      model: 'gpt-3.5-turbo'
+      model: LLM::Config.model_for(:generation)
     )
     raise
   end
@@ -260,9 +255,5 @@ class TailoredAnswerService
       required: ['text'],
       additionalProperties: false
     }
-  end
-
-  def openai_configured?
-    ENV['OPENAI_API_KEY'].present?
   end
 end
