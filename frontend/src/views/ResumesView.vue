@@ -4,107 +4,163 @@
       <!-- Header -->
       <div class="flex justify-between items-center mb-8">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">My Resumes</h1>
+          <h1 class="text-3xl font-extrabold text-gray-900">My Resumes</h1>
           <p class="text-gray-600 mt-1">Upload and manage your resume files</p>
         </div>
-        <button
+        <BaseButton
+          variant="primary"
+          size="lg"
           @click="showUploadModal = true"
-          class="btn flex items-center space-x-2"
+          aria-label="Upload new resume"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
           <span>Upload Resume</span>
-        </button>
+        </BaseButton>
       </div>
 
       <!-- Stats -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div class="card">
+        <BaseCard hoverable>
           <p class="text-sm text-gray-600">Total</p>
           <p class="text-3xl font-bold text-gray-900">{{ resumes.length }}</p>
-        </div>
-        <div class="card">
+        </BaseCard>
+        <BaseCard hoverable>
           <p class="text-sm text-gray-600">Parsed</p>
           <p class="text-3xl font-bold text-green-600">{{ resumeStore.statusCount('parsed') }}</p>
-        </div>
-        <div class="card">
+        </BaseCard>
+        <BaseCard hoverable>
           <p class="text-sm text-gray-600">Processing</p>
           <p class="text-3xl font-bold text-blue-600">{{ resumeStore.statusCount('processing') }}</p>
-        </div>
-        <div class="card">
+        </BaseCard>
+        <BaseCard hoverable>
           <p class="text-sm text-gray-600">Failed</p>
           <p class="text-3xl font-bold text-red-600">{{ resumeStore.statusCount('failed') }}</p>
-        </div>
+        </BaseCard>
+      </div>
+
+      <!-- Search and Filter -->
+      <div class="mb-6">
+        <SearchFilterBar
+          v-model="searchQuery"
+          v-model:selected-filter="statusFilter"
+          v-model:selected-sort="sortOption"
+          placeholder="Search resumes by name..."
+          aria-label="Search resumes"
+          :filters="statusFilters"
+          filter-label="Resumes"
+          filter-aria-label="Filter by status"
+          :sorts="sortOptions"
+          sort-aria-label="Sort resumes"
+          :results-count="filteredResumes.length"
+        />
       </div>
 
       <!-- Resume List -->
-      <div class="card">
+      <BaseCard>
+        <!-- Loading State -->
         <div v-if="loading" class="text-center py-12">
-          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p class="text-gray-600 mt-4">Loading resumes...</p>
+          <SkeletonLoader type="table" :count="3" />
         </div>
 
-        <div v-else-if="error" class="text-center py-12">
-          <p class="text-red-600">{{ error }}</p>
-          <button @click="loadResumes" class="btn mt-4">Retry</button>
+        <!-- Error State -->
+        <div v-else-if="error" class="py-12">
+          <ErrorStateWithRetry
+            :error-message="error"
+            @retry="loadResumes"
+          />
         </div>
 
-        <div v-else-if="resumes.length === 0" class="text-center py-12">
-          <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <p class="text-gray-600 mb-4">No resumes uploaded yet</p>
-          <button @click="showUploadModal = true" class="btn">Upload Your First Resume</button>
+        <!-- Empty State -->
+        <div v-else-if="resumes.length === 0">
+          <EmptyState
+            type="document"
+            title="No resumes uploaded yet"
+            description="Upload your first resume to get started with tailored job applications."
+            action-label="Upload Your First Resume"
+            @action="showUploadModal = true"
+          />
         </div>
 
+        <!-- No Results State -->
+        <div v-else-if="filteredResumes.length === 0">
+          <EmptyState
+            type="search"
+            title="No resumes found"
+            description="Try adjusting your search or filter criteria."
+            action-label="Clear Filters"
+            @action="clearFilters"
+          />
+        </div>
+
+        <!-- Table -->
         <div v-else class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File Info</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Uploaded</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Name
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  File Info
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Uploaded
+                </th>
+                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="resume in resumes" :key="resume.id" class="hover:bg-gray-50">
+              <tr v-for="resume in filteredResumes" :key="resume.id" class="hover:bg-gray-50 transition-colors">
                 <td class="px-6 py-4">
-                  <router-link :to="`/resumes/${resume.id}`" class="text-primary hover:text-blue-700 font-medium">
+                  <router-link
+                    :to="`/resumes/${resume.id}`"
+                    class="text-primary hover:text-blue-700 font-medium focus:outline-none focus:underline"
+                  >
                     {{ resume.name }}
                   </router-link>
                 </td>
                 <td class="px-6 py-4">
-                  <span :class="statusClass(resume.status)" class="px-2 py-1 text-xs font-semibold rounded-full">
+                  <BaseBadge :variant="getStatusVariant(resume.status)">
                     {{ resume.status }}
-                  </span>
+                  </BaseBadge>
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-600">
                   <div v-if="resume.file">
-                    <p>{{ resume.file.filename }}</p>
+                    <p class="font-medium">{{ resume.file.filename }}</p>
                     <p class="text-xs text-gray-500">{{ formatFileSize(resume.file.byte_size) }}</p>
                   </div>
+                  <p v-else class="text-gray-400 italic">No file</p>
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-600">
                   {{ formatDate(resume.created_at) }}
                 </td>
                 <td class="px-6 py-4 text-right text-sm space-x-2">
-                  <router-link :to="`/resumes/${resume.id}`" class="text-primary hover:text-blue-700">
+                  <router-link
+                    :to="`/resumes/${resume.id}`"
+                    class="text-primary hover:text-blue-700 font-medium focus:outline-none focus:underline"
+                    aria-label="`View ${resume.name}`"
+                  >
                     View
                   </router-link>
-                  <a
+                  <button
                     v-if="resume.file"
-                    :href="getDownloadUrl(resume.id)"
-                    target="_blank"
-                    class="text-green-600 hover:text-green-800"
+                    @click="handleDownload(resume)"
+                    class="text-green-600 hover:text-green-800 font-medium focus:outline-none focus:underline"
+                    :aria-label="`Download ${resume.name}`"
                   >
                     Download
-                  </a>
+                  </button>
                   <button
-                    @click="handleDelete(resume.id)"
-                    class="text-red-600 hover:text-red-800"
+                    @click="confirmDelete(resume)"
+                    class="text-red-600 hover:text-red-800 font-medium focus:outline-none focus:underline"
+                    :aria-label="`Delete ${resume.name}`"
                   >
                     Delete
                   </button>
@@ -113,122 +169,257 @@
             </tbody>
           </table>
         </div>
-      </div>
+      </BaseCard>
     </div>
 
     <!-- Upload Modal -->
-    <div v-if="showUploadModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-8 max-w-2xl w-full mx-4">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-2xl font-bold text-gray-900">Upload Resume</h2>
-          <button @click="closeUploadModal" class="text-gray-500 hover:text-gray-700">
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-          </button>
+    <BaseModal
+      v-model="showUploadModal"
+      title="Upload Resume"
+      size="lg"
+      @close="closeUploadModal"
+    >
+      <form @submit.prevent="handleUpload">
+        <div class="mb-6">
+          <label for="resume-name" class="block text-sm font-medium text-gray-700 mb-2">
+            Resume Name <span class="text-red-500">*</span>
+          </label>
+          <input
+            id="resume-name"
+            v-model="uploadForm.name"
+            type="text"
+            required
+            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="e.g., Software Engineer Resume 2024"
+            aria-required="true"
+          />
         </div>
 
-        <form @submit.prevent="handleUpload">
-          <div class="mb-6">
-            <label for="resume-name" class="block text-sm font-medium text-gray-700 mb-2">
-              Resume Name
-            </label>
-            <input
-              id="resume-name"
-              v-model="uploadForm.name"
-              type="text"
-              required
-              class="input"
-              placeholder="e.g., Software Engineer Resume 2024"
-            />
-          </div>
+        <div class="mb-6">
+          <FileUpload
+            ref="fileUploadRef"
+            @file-selected="handleFileSelected"
+            @file-cleared="uploadForm.file = null"
+          />
+          <p class="mt-2 text-sm text-gray-500">
+            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Supported formats: PDF, DOCX, TXT • Max size: 10MB
+          </p>
+        </div>
 
-          <div class="mb-6">
-            <FileUpload
-              ref="fileUploadRef"
-              @file-selected="handleFileSelected"
-              @file-cleared="uploadForm.file = null"
-            />
-          </div>
-
-          <div v-if="uploadError" class="mb-6 rounded-md bg-red-50 p-4">
+        <div v-if="uploadError" class="mb-6 rounded-md bg-red-50 p-4 border border-red-200" role="alert">
+          <div class="flex">
+            <svg class="h-5 w-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
             <p class="text-sm text-red-800">{{ uploadError }}</p>
           </div>
+        </div>
 
-          <div class="flex justify-end space-x-4">
-            <button
+        <template #footer>
+          <div class="flex justify-end space-x-3">
+            <BaseButton
               type="button"
+              variant="ghost"
               @click="closeUploadModal"
-              class="btn-secondary"
               :disabled="uploading"
             >
               Cancel
-            </button>
-            <button
+            </BaseButton>
+            <BaseButton
               type="submit"
-              class="btn"
-              :disabled="!uploadForm.file || uploading"
+              variant="primary"
+              :loading="uploading"
+              loading-text="Uploading..."
+              :disabled="!uploadForm.file"
             >
-              {{ uploading ? 'Uploading...' : 'Upload' }}
-            </button>
+              Upload Resume
+            </BaseButton>
           </div>
-        </form>
-      </div>
-    </div>
+        </template>
+      </form>
+    </BaseModal>
+
+    <!-- Delete Confirmation Dialog -->
+    <ConfirmDialog
+      v-model="showDeleteDialog"
+      type="danger"
+      title="Delete Resume"
+      :message="`Are you sure you want to delete &quot;${resumeToDelete?.name}&quot;?`"
+      confirm-text="Delete"
+      cancel-text="Cancel"
+      :loading="deleting"
+      @confirm="handleDelete"
+      @cancel="cancelDelete"
+    >
+      <p class="text-sm text-gray-600">
+        This action cannot be undone. The resume and all associated data will be permanently removed.
+      </p>
+    </ConfirmDialog>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useResumeStore } from '@/stores/resume'
+import { useToast } from '@/composables/useToast'
 import resumeService from '@/services/resumeService'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
+import BaseBadge from '@/components/ui/BaseBadge.vue'
+import BaseCard from '@/components/ui/BaseCard.vue'
+import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
+import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
+import ErrorStateWithRetry from '@/components/ui/ErrorStateWithRetry.vue'
+import SearchFilterBar from '@/components/ui/SearchFilterBar.vue'
 import FileUpload from '@/components/common/FileUpload.vue'
 
 const resumeStore = useResumeStore()
+const toast = useToast()
 
+// State
 const showUploadModal = ref(false)
+const showDeleteDialog = ref(false)
 const uploadForm = ref({
   name: '',
   file: null
 })
 const uploadError = ref(null)
 const uploading = ref(false)
+const deleting = ref(false)
 const fileUploadRef = ref(null)
+const resumeToDelete = ref(null)
 
+// Search and Filter State
+const searchQuery = ref('')
+const statusFilter = ref('')
+const sortOption = ref('newest')
+
+// Filter Options
+const statusFilters = [
+  { label: 'Processing', value: 'processing' },
+  { label: 'Parsed', value: 'parsed' },
+  { label: 'Failed', value: 'failed' },
+  { label: 'Pending', value: 'pending' }
+]
+
+const sortOptions = [
+  { label: 'Newest First', value: 'newest' },
+  { label: 'Oldest First', value: 'oldest' },
+  { label: 'Name (A-Z)', value: 'name-asc' },
+  { label: 'Name (Z-A)', value: 'name-desc' }
+]
+
+// Computed
 const resumes = computed(() => resumeStore.resumes)
 const loading = computed(() => resumeStore.loading)
 const error = computed(() => resumeStore.error)
 
+const filteredResumes = computed(() => {
+  let result = [...resumes.value]
+
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    result = result.filter(resume =>
+      resume.name.toLowerCase().includes(query) ||
+      resume.file?.filename?.toLowerCase().includes(query)
+    )
+  }
+
+  // Apply status filter
+  if (statusFilter.value) {
+    result = result.filter(resume => resume.status === statusFilter.value)
+  }
+
+  // Apply sorting
+  result.sort((a, b) => {
+    switch (sortOption.value) {
+      case 'newest':
+        return new Date(b.created_at) - new Date(a.created_at)
+      case 'oldest':
+        return new Date(a.created_at) - new Date(b.created_at)
+      case 'name-asc':
+        return a.name.localeCompare(b.name)
+      case 'name-desc':
+        return b.name.localeCompare(a.name)
+      default:
+        return 0
+    }
+  })
+
+  return result
+})
+
+// Lifecycle
 onMounted(() => {
   loadResumes()
 })
 
+// Methods
 const loadResumes = async () => {
   try {
     await resumeStore.fetchResumes()
   } catch (err) {
     console.error('Failed to load resumes:', err)
+    toast.error(
+      'Failed to load resumes',
+      'Please try again or contact support if the problem persists.'
+    )
   }
 }
 
 const handleFileSelected = (file) => {
   uploadForm.value.file = file
+  uploadError.value = null
+
+  // Auto-populate name from filename if empty
   if (!uploadForm.value.name) {
     uploadForm.value.name = file.name.replace(/\.[^/.]+$/, '')
   }
 }
 
 const handleUpload = async () => {
-  if (!uploadForm.value.file) return
+  if (!uploadForm.value.file) {
+    uploadError.value = 'Please select a file to upload'
+    return
+  }
 
   uploading.value = true
   uploadError.value = null
 
   try {
     await resumeStore.uploadResume(uploadForm.value.file, uploadForm.value.name)
+
+    toast.success(
+      'Resume uploaded successfully!',
+      'Your resume is being parsed. This usually takes 20-40 seconds.',
+      {
+        duration: 5000
+      }
+    )
+
     closeUploadModal()
   } catch (err) {
-    uploadError.value = err.response?.data?.error?.message || 'Failed to upload resume'
+    console.error('Upload failed:', err)
+
+    // Provide specific error messages
+    const errorMessage = err.response?.data?.error?.message
+    if (errorMessage?.includes('size')) {
+      uploadError.value = 'File size exceeds 10MB limit. Please compress your file and try again.'
+    } else if (errorMessage?.includes('format') || errorMessage?.includes('type')) {
+      uploadError.value = 'Invalid file format. Please use PDF, DOCX, or TXT files only.'
+    } else {
+      uploadError.value = errorMessage || 'Failed to upload resume. Please try again.'
+    }
+
+    toast.error(
+      'Upload failed',
+      uploadError.value
+    )
   } finally {
     uploading.value = false
   }
@@ -243,13 +434,57 @@ const closeUploadModal = () => {
   }
 }
 
-const handleDelete = async (id) => {
-  if (!confirm('Are you sure you want to delete this resume?')) return
+const confirmDelete = (resume) => {
+  resumeToDelete.value = resume
+  showDeleteDialog.value = true
+}
+
+const cancelDelete = () => {
+  resumeToDelete.value = null
+  showDeleteDialog.value = false
+}
+
+const handleDelete = async () => {
+  if (!resumeToDelete.value) return
+
+  deleting.value = true
 
   try {
-    await resumeStore.deleteResume(id)
+    await resumeStore.deleteResume(resumeToDelete.value.id)
+
+    toast.success(
+      'Resume deleted',
+      `"${resumeToDelete.value.name}" has been permanently removed.`
+    )
+
+    showDeleteDialog.value = false
+    resumeToDelete.value = null
   } catch (err) {
-    alert('Failed to delete resume')
+    console.error('Delete failed:', err)
+    toast.error(
+      'Failed to delete resume',
+      'Please try again or contact support if the problem persists.'
+    )
+  } finally {
+    deleting.value = false
+  }
+}
+
+const handleDownload = (resume) => {
+  try {
+    const url = getDownloadUrl(resume.id)
+    window.open(url, '_blank')
+
+    toast.success(
+      'Download started',
+      `Downloading ${resume.file.filename}`
+    )
+  } catch (err) {
+    console.error('Download failed:', err)
+    toast.error(
+      'Download failed',
+      'Please try again or contact support.'
+    )
   }
 }
 
@@ -257,18 +492,38 @@ const getDownloadUrl = (id) => {
   return resumeService.getDownloadUrl(id)
 }
 
-const statusClass = (status) => {
-  const classes = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    processing: 'bg-blue-100 text-blue-800',
-    parsed: 'bg-green-100 text-green-800',
-    failed: 'bg-red-100 text-red-800'
+const getStatusVariant = (status) => {
+  const variants = {
+    pending: 'warning',
+    processing: 'info',
+    parsed: 'success',
+    failed: 'error'
   }
-  return classes[status] || 'bg-gray-100 text-gray-800'
+  return variants[status] || 'default'
+}
+
+const clearFilters = () => {
+  searchQuery.value = ''
+  statusFilter.value = ''
 }
 
 const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffInHours = (now - date) / (1000 * 60 * 60)
+
+  // Show relative time if less than 24 hours
+  if (diffInHours < 24) {
+    if (diffInHours < 1) {
+      const minutes = Math.floor(diffInHours * 60)
+      return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`
+    }
+    const hours = Math.floor(diffInHours)
+    return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`
+  }
+
+  // Show absolute date for older items
+  return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
