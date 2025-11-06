@@ -21,3 +21,5 @@ module LLM
     end
   end
 end
+
+LLM::ParserRegistry.register(:resume, LLM::ResumeParser)

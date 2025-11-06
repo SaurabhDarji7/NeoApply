@@ -184,21 +184,18 @@ class TailoredAnswerService
       raise error
     end
 
-    client = OpenAI::Client.new(access_token: LLM::Config.api_key)
-
+    client = LLM::OpenAIClient.new
     max_tokens = LLM::Config.calculate_max_tokens(max_length || 500)
 
     response = client.chat(
-      parameters: {
-        model: LLM::Config.model_for(:generation),
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: max_tokens,
-        temperature: LLM::Config.temperature_for(:generation),
-        response_format: LLM::Config.json_schema_format(
-          name: 'tailored_answer',
-          schema: tailored_answer_json_schema
-        )
-      }
+      model: LLM::Config.model_for(:generation),
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: max_tokens,
+      temperature: LLM::Config.temperature_for(:generation),
+      response_format: LLM::Config.json_schema_format(
+        name: 'tailored_answer',
+        schema: tailored_answer_json_schema
+      )
     )
 
     parsed_response = JSON.parse(response.dig('choices', 0, 'message', 'content'))
