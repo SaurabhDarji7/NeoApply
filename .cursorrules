@@ -1,14 +1,151 @@
 # NeoApply Coding Standards
 
+## 🎯 CORE ARCHITECTURAL PRINCIPLES (MUST FOLLOW)
+
+### 1. SIMPLICITY FIRST - "You Aren't Gonna Need It" (YAGNI)
+
+**BEFORE adding ANY abstraction, ask:**
+- ❓ Do I have **3+ concrete use cases** RIGHT NOW that need this abstraction?
+- ❓ Is this solving an **actual problem** or a **hypothetical future problem**?
+- ❓ Can I solve this with **simple configuration** instead of inheritance/patterns?
+
+**Rules:**
+- ✅ START with the simplest solution that works
+- ✅ ADD abstraction only when you have concrete duplication
+- ✅ PREFER configuration over inheritance
+- ✅ PREFER simple functions over complex patterns
+- ❌ NEVER create "BaseX" classes until you have 3+ similar classes
+- ❌ NEVER create registries/factories unless absolutely necessary
+- ❌ NEVER create separate files for tiny classes (< 30 lines)
+
+**Decision Tree for Abstraction:**
+```
+Need to do something similar in multiple places?
+├─ Same code in 2 places?
+│  └─ Just use a method with parameters (NO abstraction yet)
+├─ Same code in 3+ places?
+│  └─ Extract to a service/module with configuration
+└─ 5+ places AND complex logic?
+   └─ NOW consider base classes/patterns
+```
+
+### 2. MEASURE COMPLEXITY - Keep It Under Control
+
+**Before committing code, check:**
+- Lines per file: < 200 (split if larger)
+- Lines per method: < 20 (extract if larger)
+- Classes per domain: < 5 (simplify if more)
+- Abstraction layers: < 3 (flatten if more)
+
+**Red Flags:**
+- 🚩 "Base" classes with only 1-2 subclasses → Over-engineering
+- 🚩 Classes that just pass configuration → Over-engineering
+- 🚩 More than 3 levels of inheritance → Over-engineering
+- 🚩 Registries/factories with < 5 registered types → Over-engineering
+- 🚩 Template method pattern for simple config → Over-engineering
+
+### 3. RAILS CONVENTIONS - Follow The Rails Way
+
+**When Rails provides a solution, USE IT:**
+- ✅ Use initializers for app setup (`config/initializers/`)
+- ✅ Use Rails.application.config for configuration
+- ✅ Use ActiveSupport::Concern for shared behavior
+- ✅ Use Rails naming conventions (no creative names)
+- ✅ Use service objects with `.call` for business logic
+- ❌ Don't create your own registry/plugin systems
+- ❌ Don't fight Rails conventions
+
+**Example - Configuration:**
+```ruby
+# ❌ BAD: Custom registry
+class MyRegistry
+  def self.register(type, klass); end
+end
+
+# ✅ GOOD: Simple Rails config
+# config/initializers/my_config.rb
+Rails.application.config.parsers = {
+  resume: ResumeParser,
+  job: JobParser
+}
+```
+
+### 4. EXTENSIBILITY - Make It Easy to Extend, Not Complex
+
+**Extensibility ≠ Complexity**
+
+Good extensibility:
+- ✅ Pass different parameters to same function
+- ✅ Add new cases to case/when or hash lookup
+- ✅ Create new service class and call it
+- ✅ Add new initializer file
+
+Bad extensibility (over-engineering):
+- ❌ Create inheritance hierarchy for simple variations
+- ❌ Build plugin/registry systems
+- ❌ Abstract everything "just in case"
+- ❌ Create frameworks within your app
+
+**Example:**
+```ruby
+# ❌ BAD: Over-engineered
+class BaseParser; end
+class ResumeParser < BaseParser; end
+class JobParser < BaseParser; end
+ParserRegistry.register(:resume, ResumeParser)
+
+# ✅ GOOD: Simple and extensible
+class Parser
+  def self.parse(text, schema:, validator:)
+    # ...
+  end
+end
+
+# Easy to extend - just pass different config!
+Parser.parse(text, schema: ResumeSchema, validator: ->(d) { ... })
+Parser.parse(text, schema: JobSchema, validator: ->(d) { ... })
+```
+
+### 5. REUSABILITY - Extract When You Have Duplication, Not Before
+
+**The Rule of Three:**
+1. First time: Write the code inline
+2. Second time: Copy-paste and modify (yes, really!)
+3. Third time: NOW extract to reusable function/class
+
+**Why?**
+- You need to see the pattern CLEARLY before abstracting
+- Premature abstraction is worse than duplication
+- Wrong abstractions are hard to undo
+
+**Example:**
+```ruby
+# ❌ BAD: Premature abstraction
+class BaseEmailSender
+  def send_email; raise NotImplementedError; end
+end
+class WelcomeEmailSender < BaseEmailSender; end
+# Only 1 use case - completely unnecessary!
+
+# ✅ GOOD: Wait for duplication
+class WelcomeEmailSender
+  def self.call(user)
+    UserMailer.welcome(user).deliver_later
+  end
+end
+# When you have 3+ similar senders, THEN extract common logic
+```
+
 ## General Principles
 
-1. **Follow SOLID Principles**
+1. **Follow SOLID Principles (But Don't Over-Apply Them)**
    - Single Responsibility: Each class has one job
    - Open/Closed: Open for extension, closed for modification
    - Liskov Substitution: Subclasses must be substitutable for base classes
    - Interface Segregation: Small, focused interfaces
    - Dependency Inversion: Depend on abstractions, not concrete implementations
    - **CRITICAL**: Dependencies must flow DOWNWARD (high-level → abstraction ← low-level)
+   - **IMPORTANT**: SOLID are guidelines, not laws. Simplicity trumps patterns.
 
 2. **No Module-Level Code Execution**
    - NEVER put executable code at module level that runs at load time
@@ -258,3 +395,146 @@ Refactor when you see:
 - Squash before merge (if appropriate)
 - Never commit secrets
 - Keep commits small and focused
+
+## 🤖 HOW CLAUDE SHOULD RESPOND TO PROMPTS
+
+### Before Writing ANY Code - Validate Against These Principles:
+
+**1. Check for Over-Engineering:**
+```
+User asks: "Create a base class for parsers"
+Claude thinks:
+  ❓ How many parsers exist? (If < 3, say NO to base class)
+  ❓ What's duplicated? (If just config, use parameters not inheritance)
+  ❓ Can I solve this with a function + config? (Usually YES)
+  
+  Response: "I see we only have 2 parsers with minimal duplication. 
+            Instead of a base class, let's use a simple function with 
+            configuration parameters. Here's why..."
+```
+
+**2. Challenge Unnecessary Abstractions:**
+```
+User asks: "Make this extensible with a plugin system"
+Claude thinks:
+  ❓ How many plugins exist now? (If < 5, registry is overkill)
+  ❓ What are the actual requirements? (Often simpler solution works)
+  
+  Response: "A plugin system might be over-engineering. Currently we have 
+            2 use cases. Let's use a simple hash lookup or case statement. 
+            We can add a registry later if we get to 5+ plugins. Here's 
+            the simpler approach..."
+```
+
+**3. Propose Simpler Alternatives:**
+```
+User asks: "Create ResumeParser and JobParser classes"
+Claude thinks:
+  ❓ Are these just configuration differences?
+  ❓ Can one class with parameters work?
+  
+  Response: "These parsers only differ in configuration (schema, validator). 
+            Instead of 2 separate classes, let's use one Parser class that 
+            accepts the config as parameters. This is simpler and more 
+            flexible. Here's how..."
+```
+
+**4. Explain Trade-offs:**
+
+When suggesting code, ALWAYS explain:
+- ✅ Why this is the simplest solution
+- ✅ What problem it solves RIGHT NOW
+- ✅ When to add abstraction (e.g., "when we have 3+ similar cases")
+- ❌ Don't just implement without explaining simplicity rationale
+
+**Example Response Format:**
+```
+Here's how I'll implement this:
+
+1. SIMPLICITY CHECK: We only have X use cases, so [simple solution]
+2. PROPOSED SOLUTION: [code]
+3. WHY IT'S SIMPLE: [explanation]
+4. WHEN TO REFACTOR: If we add Y or Z, then we should consider [abstraction]
+
+[Then show the code]
+```
+
+### Red Flags - When Claude Should Push Back:
+
+**Immediately question if user asks for:**
+- 🚩 "Create a Base class" (when < 3 subclasses exist)
+- 🚩 "Make it extensible" (without specific requirements)
+- 🚩 "Add a registry/factory" (when < 5 types exist)
+- 🚩 "Abstract this" (without concrete duplication)
+- 🚩 "Make it reusable" (without 3+ uses)
+
+**Respond with:**
+"I notice [pattern]. We currently have [count] use cases. The simplest 
+solution is [X]. We can add [abstraction] later when we have [specific 
+trigger]. Does this work for you?"
+
+### Green Lights - When Abstraction Is Good:
+
+**Add abstraction when:**
+- ✅ 3+ concrete, existing use cases with clear duplication
+- ✅ Clear pattern that's unlikely to change
+- ✅ Abstraction makes code significantly simpler (not complex)
+- ✅ Rails provides a standard pattern for this
+
+**Example Good Cases:**
+- Service objects (Rails pattern, reduces controller complexity)
+- Concerns (Rails pattern, 3+ models need same behavior)
+- Config classes (centralize scattered config)
+- Validators (Rails pattern, reusable validations)
+
+### Code Review Checklist (Claude Self-Check):
+
+Before presenting code, ask yourself:
+- [ ] Can I solve this with a simple function + parameters? (If YES → do it)
+- [ ] Am I creating files < 30 lines? (If YES → combine them)
+- [ ] Am I creating "Base" classes? (If YES → do I have 3+ subclasses?)
+- [ ] Am I building a framework? (If YES → STOP, use Rails patterns)
+- [ ] Would a Rails developer recognize this pattern? (If NO → simplify)
+- [ ] Can I explain this to a junior dev in 2 minutes? (If NO → too complex)
+
+### Example Interaction:
+
+**User:** "Create parser classes for resume and job description"
+
+**Claude Response:**
+```
+I'll create a single Parser class with configuration parameters instead of 
+separate classes, because:
+
+1. SIMPLICITY: We only have 2 parsers (need 3+ for base class pattern)
+2. DIFFERENCE: They only differ in schema/validator config
+3. RAILS WAY: Rails favors configuration over inheritance
+
+Here's the approach:
+[shows simple Parser.parse(text, schema:, validator:) code]
+
+This is easier to test, easier to understand, and easier to extend (just 
+pass different config). When we add more parser types (email, PDF, etc.) 
+and see clear shared logic, we can refactor to a base class.
+
+Does this work for you?
+```
+
+## Summary for Claude
+
+**Your job is to:**
+1. ✅ Write the simplest code that solves the problem
+2. ✅ Challenge over-engineering (politely)
+3. ✅ Explain trade-offs between simple vs. complex
+4. ✅ Follow Rails conventions
+5. ✅ Suggest when to refactor later (with specific triggers)
+
+**Your job is NOT to:**
+1. ❌ Show off design patterns
+2. ❌ Build extensible systems for 1-2 use cases
+3. ❌ Create abstractions "just in case"
+4. ❌ Build frameworks within the application
+5. ❌ Assume the user knows what's over-engineered
+
+**Remember:** Code that's easy to change is better than code that's "perfectly architected."
+Simple, clear code > Complex, "elegant" code.
