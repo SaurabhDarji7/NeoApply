@@ -1,0 +1,260 @@
+# NeoApply Coding Standards
+
+## General Principles
+
+1. **Follow SOLID Principles**
+   - Single Responsibility: Each class has one job
+   - Open/Closed: Open for extension, closed for modification
+   - Liskov Substitution: Subclasses must be substitutable for base classes
+   - Interface Segregation: Small, focused interfaces
+   - Dependency Inversion: Depend on abstractions, not concrete implementations
+   - **CRITICAL**: Dependencies must flow DOWNWARD (high-level → abstraction ← low-level)
+
+2. **No Module-Level Code Execution**
+   - NEVER put executable code at module level that runs at load time
+   - Use Rails initializers for configuration: `config/initializers/`
+   - Example BAD: `LLM::Registry.register(:foo, Bar)` at bottom of file
+   - Example GOOD: Put registration in `config/initializers/`
+
+## Ruby on Rails Best Practices
+
+### Code Organization
+- Use Rails conventions (model, controller, service, etc.)
+- Service objects in `app/services/`
+- Use concerns for shared behavior: `app/models/concerns/`, `app/controllers/concerns/`
+- Use initializers for app configuration: `config/initializers/`
+- Use PORO (Plain Old Ruby Objects) when appropriate
+
+### Configuration
+- Use `Rails.application.config` for app-wide config
+- Environment-specific config in `config/environments/`
+- Secrets in environment variables (ENV), never hardcode
+- Use initializers for third-party library configuration
+
+### Database
+- Always use migrations for schema changes
+- Use indexing for foreign keys and frequently queried columns
+- Use database constraints (NOT NULL, foreign keys, unique)
+- Avoid N+1 queries - use `includes`, `preload`, `eager_load`
+
+### Models
+- Keep models thin - business logic in services
+- Use scopes for common queries
+- Use validations at model level
+- Use callbacks sparingly (they make testing hard)
+
+### Controllers
+- Keep controllers thin - delegate to services
+- One action per controller method
+- Use strong parameters
+- RESTful routes preferred
+
+### Services
+- Use service objects for complex business logic
+- One public method per service (`.call` or `.perform`)
+- Return consistent data structures
+- Handle errors explicitly - raise or return error object
+
+### Background Jobs
+- Use Active Job (Rails 8 uses Solid Queue)
+- Idempotent jobs (safe to run multiple times)
+- Handle failures gracefully
+- Set retry strategy explicitly
+
+### Testing
+- Write tests for all new code
+- Use RSpec conventions (describe, context, it)
+- Use factories (FactoryBot) not fixtures
+- Mock external services
+- Test edge cases and error paths
+
+### Dependencies
+- Avoid circular dependencies
+- Use dependency injection for testability
+- Prefer composition over inheritance
+- Use abstractions (interfaces/base classes) for flexibility
+
+### Error Handling
+- Use Rails' error handling (rescue_from in controllers)
+- Log errors with context
+- Use error tracking (Honeybadger)
+- Never swallow exceptions silently
+- Provide meaningful error messages
+
+### Security
+- Never trust user input
+- Use strong parameters in controllers
+- Sanitize HTML output
+- Use parameterized queries (ActiveRecord does this)
+- Keep gems updated (security patches)
+
+## Vue.js Best Practices
+
+### Component Organization
+- One component per file
+- Use Single File Components (.vue)
+- Component names: multi-word, PascalCase
+- Props: define types, required, defaults
+- Emit events for parent communication
+
+### State Management
+- Use Pinia for global state
+- Local state in component when possible
+- Keep state flat and normalized
+- Use getters for derived state
+
+### Composition API
+- Use `<script setup>` syntax
+- Group related logic with composables
+- Use `ref` for primitives, `reactive` for objects
+- Destructure props with care (loses reactivity)
+
+### Performance
+- Use `v-memo` for expensive list items
+- Lazy load routes and components
+- Use computed for derived values
+- Avoid watchers when computed can work
+
+### Styling
+- Use scoped styles in components
+- Use Tailwind utility classes
+- Consistent naming (BEM if using custom CSS)
+- Mobile-first responsive design
+
+## Code Style
+
+### Ruby
+- Follow RuboCop standard (https://rubystyle.guide/)
+- 2 spaces for indentation
+- Use `snake_case` for methods and variables
+- Use `PascalCase` for classes and modules
+- Use `SCREAMING_SNAKE_CASE` for constants
+- Max line length: 120 characters
+- No trailing whitespace
+- String literals: prefer single quotes unless interpolation
+- Use symbols for hash keys
+
+### JavaScript/Vue
+- Follow ESLint + Prettier standards
+- 2 spaces for indentation
+- Use `camelCase` for variables and functions
+- Use `PascalCase` for components and classes
+- Use `SCREAMING_SNAKE_CASE` for constants
+- Max line length: 100 characters
+- Always use `const` or `let`, never `var`
+- Prefer arrow functions for callbacks
+- Use template literals for string interpolation
+
+## Anti-Patterns to Avoid
+
+### Ruby/Rails
+- ❌ Fat models - use services
+- ❌ Fat controllers - use services
+- ❌ Callback hell - be explicit
+- ❌ Module-level executable code - use initializers
+- ❌ Hardcoding - use configuration
+- ❌ Direct class instantiation everywhere - use DI/registry
+- ❌ Tight coupling - use abstractions
+- ❌ God objects - follow SRP
+
+### Vue
+- ❌ Props mutation - emit events instead
+- ❌ Direct DOM manipulation - use Vue directives
+- ❌ Massive components - break them down
+- ❌ Business logic in components - use composables/services
+- ❌ Inline styles - use classes
+- ❌ Deep prop drilling - use provide/inject or state management
+
+## Architecture Patterns
+
+### Registry Pattern (for plugins/extensions)
+```ruby
+# Good: Registry in initializer
+Rails.application.config.after_initialize do
+  MyRegistry.register(:type, MyClass)
+end
+
+# Bad: Registration at module level
+MyRegistry.register(:type, MyClass)  # Runs at load time!
+```
+
+### Service Pattern
+```ruby
+# Good: Single responsibility, returns result
+class CreateUser
+  def self.call(params)
+    user = User.create!(params)
+    SendWelcomeEmail.call(user)
+    user
+  end
+end
+
+# Bad: Multiple responsibilities, unclear return
+class UserService
+  def create_and_email_and_log(params)
+    # ...
+  end
+end
+```
+
+### Dependency Injection
+```ruby
+# Good: Inject dependencies
+class Parser
+  def initialize(client: OpenAIClient.new)
+    @client = client
+  end
+end
+
+# Bad: Hard-coded dependency
+class Parser
+  def initialize
+    @client = OpenAI::Client.new  # Can't mock!
+  end
+end
+```
+
+## File Naming Conventions
+
+### Ruby/Rails
+- Models: `user.rb`, `job_application.rb`
+- Controllers: `users_controller.rb`
+- Services: `create_user.rb`, `parse_resume.rb`
+- Jobs: `send_email_job.rb`
+- Specs: `user_spec.rb`, `create_user_spec.rb`
+
+### Vue
+- Components: `UserProfile.vue`, `JobCard.vue`
+- Composables: `useAuth.js`, `useJobs.js`
+- Stores: `userStore.js`, `jobStore.js`
+- Views/Pages: `HomePage.vue`, `ProfilePage.vue`
+
+## Documentation
+
+- Use YARD for Ruby documentation
+- Use JSDoc for JavaScript documentation
+- README.md for setup instructions
+- Document public APIs
+- Comment WHY not WHAT
+- Keep comments up to date (or delete them)
+
+## When to Refactor
+
+Refactor when you see:
+- Duplication (DRY)
+- Long methods (>20 lines)
+- Large classes (>200 lines)
+- Complex conditionals (extract to methods)
+- Hard to test code
+- Violation of SOLID principles
+- Unclear naming
+- Tight coupling
+
+## Git Practices
+
+- Atomic commits (one logical change)
+- Descriptive commit messages
+- Branch per feature/fix
+- Squash before merge (if appropriate)
+- Never commit secrets
+- Keep commits small and focused

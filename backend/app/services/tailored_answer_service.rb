@@ -88,9 +88,7 @@ class TailoredAnswerService
     resume_text = extract_resume_text
 
     # Determine field type from label
-    if cover_letter_field?(label)
-      generate_cover_letter(resume_text, max_length)
-    elsif why_interested_field?(label)
+    if why_interested_field?(label)
       generate_why_interested(resume_text, max_length)
     elsif experience_field?(label)
       generate_experience_summary(resume_text, max_length)
@@ -100,37 +98,12 @@ class TailoredAnswerService
     end
   end
 
-  def cover_letter_field?(label)
-    label.include?('cover') || label.include?('letter')
-  end
-
   def why_interested_field?(label)
     label.include?('why') || label.include?('interested') || label.include?('motivation')
   end
 
   def experience_field?(label)
     label.include?('experience') || label.include?('background') || label.include?('qualification')
-  end
-
-  def generate_cover_letter(resume_text, max_length)
-    prompt = <<~PROMPT
-      Write a concise, professional cover letter paragraph based on this resume:
-
-      #{resume_text}
-
-      For this job:
-      #{truncate_job_text}
-
-      Requirements:
-      - Be professional and enthusiastic
-      - Highlight 2-3 most relevant skills or experiences
-      - Show genuine interest in the role
-      - Keep it under #{max_length || 500} characters
-      - No greeting or signature, just the body paragraph
-      - Write in first person
-    PROMPT
-
-    call_openai(prompt, max_length || 500)
   end
 
   def generate_why_interested(resume_text, max_length)
@@ -201,23 +174,42 @@ class TailoredAnswerService
   end
 
   def call_openai(prompt, max_length)
-    return fallback_response unless openai_configured?
+    unless LLM::Config.api_key_configured?
+      error = StandardError.new("OpenAI API key not configured")
+      LLMServiceErrorReporting.report_api_error(
+        error,
+        operation: 'generate_tailored_answer',
+        model: LLM::Config.model_for(:generation)
+      )
+      raise error
+    end
 
-    client = OpenAI::Client.new(access_token: ENV['OPENAI_API_KEY'])
-
-    # Estimate tokens (rough: 1 token ≈ 4 characters)
-    max_tokens = [(max_length || 500) / 3, 150].max.to_i
+    client = LLM::OpenAIClient.new
+    max_tokens = LLM::Config.calculate_max_tokens(max_length || 500)
 
     response = client.chat(
-      parameters: {
-        model: 'gpt-3.5-turbo', # Using 3.5-turbo for cost efficiency
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: max_tokens,
-        temperature: 0.7
-      }
+      model: LLM::Config.model_for(:generation),
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: max_tokens,
+      temperature: LLM::Config.temperature_for(:generation),
+      response_format: LLM::Config.json_schema_format(
+        name: 'tailored_answer',
+        schema: tailored_answer_json_schema
+      )
     )
 
-    text = response.dig('choices', 0, 'message', 'content')&.strip || fallback_response
+    parsed_response = JSON.parse(response.dig('choices', 0, 'message', 'content'))
+    text = parsed_response['text']&.strip
+
+    unless text.present?
+      error = StandardError.new("Empty text response from OpenAI")
+      LLMServiceErrorReporting.report_parsing_error(
+        error,
+        operation: 'generate_tailored_answer',
+        raw_response: response
+      )
+      raise error
+    end
 
     # Truncate if needed
     if max_length && text.length > max_length
@@ -228,17 +220,37 @@ class TailoredAnswerService
     end
 
     text
+  rescue JSON::ParserError => e
+    LLMServiceErrorReporting.report_parsing_error(
+      e,
+      operation: 'generate_tailored_answer',
+      raw_response: response
+    )
+    raise StandardError, "Invalid JSON response from LLM: #{e.message}"
+  rescue OpenAI::Error => e
+    LLMServiceErrorReporting.report_api_error(
+      e,
+      operation: 'generate_tailored_answer',
+      model: LLM::Config.model_for(:generation)
+    )
+    raise
   rescue StandardError => e
-    Rails.logger.error("OpenAI API error: #{e.message}")
-    Rails.logger.error(e.backtrace.join("\n"))
-    fallback_response
+    LLMServiceErrorReporting.report_api_error(
+      e,
+      operation: 'generate_tailored_answer',
+      model: LLM::Config.model_for(:generation)
+    )
+    raise
   end
 
-  def openai_configured?
-    ENV['OPENAI_API_KEY'].present?
-  end
-
-  def fallback_response
-    "I am excited about this opportunity and believe my skills and experience make me a strong fit for this role. I look forward to discussing how I can contribute to your team."
+  def tailored_answer_json_schema
+    {
+      type: 'object',
+      properties: {
+        text: { type: 'string' }
+      },
+      required: ['text'],
+      additionalProperties: false
+    }
   end
 end

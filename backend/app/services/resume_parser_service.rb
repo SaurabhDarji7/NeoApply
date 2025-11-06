@@ -17,20 +17,16 @@ class ResumeParserService
 
     # Parse with LLM
     Rails.logger.info "=== SENDING TO LLM ==="
-    result = ::LLMService.parse_resume(text)
+    parsed_data = ::LLMService.parse_resume(text)
     Rails.logger.info "=== LLM PARSING COMPLETED ==="
-
-    # Extract the parsed data from the result wrapper
-    parsed_data = result[:parsed_data]
 
     # Validate structure
     validate_parsed_data(parsed_data)
 
-    # Save to database with raw response
+    # Save to database
     @resume.update!(
       status: 'completed',
-      parsed_data: parsed_data,
-      raw_llm_response: result[:raw_response]
+      parsed_data: parsed_data
     )
 
     parsed_data
