@@ -27,6 +27,9 @@ module Api
         resume = current_user.resumes.new(resume_params)
 
         if resume.save
+          # Mark that user has uploaded their first resume (for onboarding)
+          current_user.mark_resume_uploaded! unless current_user.has_uploaded_resume?
+
           render json: {
             data: resume_response(resume),
             meta: { message: 'Resume uploaded successfully. Parsing in progress.' }

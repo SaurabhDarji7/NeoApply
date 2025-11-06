@@ -9,6 +9,12 @@
           </div>
           <div class="flex items-center space-x-4">
             <span class="text-sm text-gray-700">{{ user?.email }}</span>
+            <router-link
+              to="/onboarding"
+              class="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Setup Wizard
+            </router-link>
             <button @click="handleLogout" class="btn-secondary">
               Logout
             </button>

@@ -16,6 +16,10 @@ Rails.application.routes.draw do
       get 'users/me', to: 'users#me'
       put 'users/me', to: 'users#update'
 
+      # Onboarding routes
+      patch 'users/onboarding/step', to: 'users#update_onboarding_step'
+      post 'users/onboarding/complete', to: 'users#complete_onboarding'
+
       # Resume routes
       resources :resumes, only: [:index, :show, :create, :destroy] do
         member do

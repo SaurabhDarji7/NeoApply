@@ -195,7 +195,10 @@ module Api
         {
           id: user.id,
           email: user.email,
-          created_at: user.created_at
+          created_at: user.created_at,
+          onboarding_completed: user.onboarding_completed?,
+          onboarding_current_step: user.onboarding_current_step,
+          has_uploaded_resume: user.has_uploaded_resume?
         }
       end
     end

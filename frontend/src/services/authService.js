@@ -19,5 +19,13 @@ export const authService = {
 
   updateProfile(data) {
     return api.put('/users/me', { user: data })
+  },
+
+  updateOnboardingStep(step) {
+    return api.patch('/users/onboarding/step', { step })
+  },
+
+  completeOnboarding() {
+    return api.post('/users/onboarding/complete')
   }
 }
