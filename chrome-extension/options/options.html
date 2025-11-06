@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeoApply Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">N</span>
+        <h1>NeoApply Settings</h1>
+      </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="main">
+      <!-- Status message -->
+      <div id="status-message" class="status-message"></div>
+
+      <!-- Autofill Profile Section -->
+      <section class="section">
+        <h2 class="section-title">Autofill Profile</h2>
+        <p class="section-description">
+          This information will be used to automatically fill job application forms
+        </p>
+
+        <form id="profile-form">
+          <!-- Personal Information -->
+          <div class="form-section">
+            <h3 class="form-section-title">Personal Information</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="first_name">First Name *</label>
+                <input type="text" id="first_name" name="first_name" required>
+              </div>
+              <div class="form-group">
+                <label for="last_name">Last Name *</label>
+                <input type="text" id="last_name" name="last_name" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" name="email" required>
+              </div>
+              <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" name="phone" placeholder="+1 (555) 123-4567">
+              </div>
+            </div>
+          </div>
+
+          <!-- Address -->
+          <div class="form-section">
+            <h3 class="form-section-title">Address</h3>
+            <div class="form-group">
+              <label for="address">Street Address</label>
+              <input type="text" id="address" name="address">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="city">City</label>
+                <input type="text" id="city" name="city">
+              </div>
+              <div class="form-group">
+                <label for="state">State/Province</label>
+                <input type="text" id="state" name="state">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="zip">ZIP/Postal Code</label>
+                <input type="text" id="zip" name="zip">
+              </div>
+              <div class="form-group">
+                <label for="country">Country</label>
+                <input type="text" id="country" name="country" value="United States">
+              </div>
+            </div>
+          </div>
+
+          <!-- Links -->
+          <div class="form-section">
+            <h3 class="form-section-title">Professional Links</h3>
+            <div class="form-group">
+              <label for="linkedin">LinkedIn Profile URL</label>
+              <input type="url" id="linkedin" name="linkedin" placeholder="https://linkedin.com/in/yourprofile">
+            </div>
+
+            <div class="form-group">
+              <label for="github">GitHub Profile URL</label>
+              <input type="url" id="github" name="github" placeholder="https://github.com/yourusername">
+            </div>
+
+            <div class="form-group">
+              <label for="portfolio">Portfolio/Website URL</label>
+              <input type="url" id="portfolio" name="portfolio" placeholder="https://yourportfolio.com">
+            </div>
+          </div>
+
+          <!-- Save button -->
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="save-btn">
+              <span id="save-text">Save Profile</span>
+              <span id="save-spinner" class="spinner" style="display: none;"></span>
+            </button>
+            <button type="button" class="btn btn-secondary" id="load-btn">
+              Load from Server
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Resume Selection -->
+      <section class="section">
+        <h2 class="section-title">Default Resume</h2>
+        <p class="section-description">
+          Select which resume to use by default for job applications
+        </p>
+
+        <div class="resume-list" id="resume-list">
+          <div class="loading">Loading resumes...</div>
+        </div>
+      </section>
+
+      <!-- Extension Settings -->
+      <section class="section">
+        <h2 class="section-title">Extension Settings</h2>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-name">Enable Extension</div>
+            <div class="setting-description">
+              Activate autofill panel on supported job sites
+            </div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="extension-enabled" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-name">Debug Mode</div>
+            <div class="setting-description">
+              Show detailed logging in browser console
+            </div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="debug-mode">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Support ATS -->
+      <section class="section">
+        <h2 class="section-title">Supported Platforms</h2>
+        <div class="ats-grid">
+          <div class="ats-card active">
+            <div class="ats-icon">✅</div>
+            <div class="ats-name">Greenhouse</div>
+            <div class="ats-status">Active</div>
+          </div>
+          <div class="ats-card active">
+            <div class="ats-icon">✅</div>
+            <div class="ats-name">Lever</div>
+            <div class="ats-status">Active</div>
+          </div>
+          <div class="ats-card">
+            <div class="ats-icon">🚧</div>
+            <div class="ats-name">Workday</div>
+            <div class="ats-status">Coming Soon</div>
+          </div>
+          <div class="ats-card">
+            <div class="ats-icon">🚧</div>
+            <div class="ats-name">ADP</div>
+            <div class="ats-status">Coming Soon</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>&copy; 2025 NeoApply. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="#" id="privacy-link">Privacy Policy</a>
+        <a href="#" id="support-link">Support</a>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="options.js"></script>
+</body>
+</html>

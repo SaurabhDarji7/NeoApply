@@ -1,0 +1,43 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Backend (Rails)
+backend/log/*
+backend/tmp/*
+backend/storage/*
+!backend/log/.keep
+!backend/tmp/.keep
+!backend/storage/.keep
+backend/.bundle
+backend/vendor/bundle
+backend/config/master.key
+backend/config/credentials/*.key
+*.gem
+*.rbc
+
+# Frontend (Node/Vue)
+frontend/node_modules/
+frontend/dist/
+frontend/.vscode/
+frontend/.idea/
+frontend/*.log
+
+# Docker
+docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+*.swn
+.vscode/
+.idea/
+
+# Test coverage
+backend/coverage/
+frontend/coverage/

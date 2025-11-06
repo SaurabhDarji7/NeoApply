@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Template Helper Plugin</title>
+  <script src="https://onlyoffice.github.io/sdkjs-plugins/v1/plugins.js"></script>
+  <script src="https://onlyoffice.github.io/sdkjs-plugins/v1/plugins-ui.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .section {
+      background: white;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h3 {
+      margin-top: 0;
+      color: #333;
+      font-size: 14px;
+      border-bottom: 2px solid #4A90E2;
+      padding-bottom: 8px;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4A90E2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      text-align: left;
+    }
+    .btn:hover {
+      background: #357ABD;
+    }
+    .btn-skill {
+      background: #52C41A;
+    }
+    .btn-skill:hover {
+      background: #389E0D;
+    }
+    .info {
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="section">
+    <h3>📝 Insert Tokens</h3>
+    <p class="info">Click to insert a token at cursor position</p>
+    <button class="btn" onclick="insertToken('company_name')">{{company_name}}</button>
+    <button class="btn" onclick="insertToken('title')">{{title}}</button>
+    <button class="btn" onclick="insertToken('job_location')">{{job_location}}</button>
+    <button class="btn" onclick="insertToken('job_type')">{{job_type}}</button>
+    <button class="btn" onclick="insertToken('experience_level')">{{experience_level}}</button>
+    <button class="btn" onclick="insertToken('top_5_skills_needed')">{{top_5_skills_needed}}</button>
+    <button class="btn" onclick="insertToken('skills_required')">{{skills_required}}</button>
+    <button class="btn" onclick="insertToken('responsibilities')">{{responsibilities}}</button>
+    <button class="btn" onclick="insertToken('qualifications')">{{qualifications}}</button>
+    <button class="btn" onclick="insertToken('salary_range')">{{salary_range}}</button>
+  </div>
+
+  <div class="section">
+    <h3>🎯 Skill Zone</h3>
+    <p class="info">Select text first, then click to wrap in skill zone markers</p>
+    <button class="btn btn-skill" onclick="wrapInSkillZone()">Mark Selection as Skill Zone</button>
+  </div>
+
+  <script src="plugin.js"></script>
+</body>
+</html>

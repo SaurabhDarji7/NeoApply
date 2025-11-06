@@ -1,0 +1,31 @@
+<row>
+  <columns>
+    <h2>Verify Your Email Address</h2>
+    <p>Hi <%= @user.email %>,</p>
+    <p>
+      Welcome to NeoApply! To complete your registration and start using your account,
+      please verify your email address using the code below:
+    </p>
+    <spacer size="20"></spacer>
+    <center>
+      <div class="otp-code"><%= @otp %></div>
+    </center>
+    <spacer size="20"></spacer>
+    <p>
+      This verification code will expire in <strong>15 minutes</strong>.
+      Enter this code on the verification page to activate your account.
+    </p>
+    <spacer size="16"></spacer>
+    <center>
+      <button href="<%= @verification_url %>" class="button">Verify Email Now</button>
+      <spacer size="8"></spacer>
+      <p class="muted">
+        Or open this link: <a href="<%= @verification_url %>"><%= @verification_url %></a>
+      </p>
+    </center>
+    <spacer size="16"></spacer>
+    <p style="color: #6b7280; font-size: 14px;">
+      If you didn't create an account with NeoApply, you can safely ignore this email.
+    </p>
+  </columns>
+</row>

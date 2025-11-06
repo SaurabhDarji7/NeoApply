@@ -1,0 +1,73 @@
+John Doe
+Software Engineer
+john.doe@email.com | (555) 123-4567 | San Francisco, CA
+LinkedIn: linkedin.com/in/johndoe | GitHub: github.com/johndoe
+
+PROFESSIONAL SUMMARY
+Experienced Full-Stack Software Engineer with 5+ years of experience building scalable web applications. Proficient in Ruby on Rails, React, and cloud technologies. Passionate about clean code and user-centric design.
+
+SKILLS
+Languages: Ruby, JavaScript, Python, SQL
+Frontend: React, Vue.js, HTML/CSS, Tailwind CSS
+Backend: Ruby on Rails, Node.js, Express.js
+Databases: PostgreSQL, MySQL, MongoDB, Redis
+DevOps: Docker, AWS, CI/CD, GitHub Actions
+Other: RESTful APIs, GraphQL, Git, Agile/Scrum
+
+EXPERIENCE
+
+Senior Software Engineer
+TechCorp Inc. | San Francisco, CA
+January 2021 - Present (3 years)
+- Led development of microservices architecture serving 1M+ users
+- Reduced API response time by 40% through optimization and caching strategies
+- Mentored team of 4 junior developers in best practices and code reviews
+- Implemented CI/CD pipeline reducing deployment time by 60%
+
+Software Engineer
+StartupXYZ | Remote
+June 2019 - December 2020 (1 year 7 months)
+- Built full-stack features for B2B SaaS platform using Rails and React
+- Developed RESTful APIs consumed by mobile and web applications
+- Improved test coverage from 45% to 85% across the codebase
+- Collaborated with product team to define technical requirements
+
+Junior Software Engineer
+DevSolutions LLC | San Francisco, CA
+August 2018 - May 2019 (10 months)
+- Developed and maintained e-commerce platform features
+- Fixed critical bugs and improved application stability
+- Participated in daily standups and sprint planning sessions
+
+EDUCATION
+
+Bachelor of Science in Computer Science
+University of California, Berkeley | Berkeley, CA
+Graduated: May 2018
+GPA: 3.7/4.0
+
+CERTIFICATIONS
+
+AWS Certified Solutions Architect - Associate
+Amazon Web Services | Issued: March 2022
+Credential ID: AWS-ASA-12345
+
+Professional Scrum Master I (PSM I)
+Scrum.org | Issued: January 2021
+
+PROJECTS
+
+E-Commerce Platform
+- Built full-featured online store with payment integration (Stripe)
+- Technologies: Rails 7, PostgreSQL, React, Tailwind CSS
+- URL: github.com/johndoe/ecommerce-platform
+
+Task Management App
+- Real-time collaborative task manager with WebSockets
+- Technologies: Node.js, Socket.io, MongoDB, Vue.js
+- URL: taskmaster-app.com
+
+LANGUAGES
+
+English - Native
+Spanish - Professional Working Proficiency

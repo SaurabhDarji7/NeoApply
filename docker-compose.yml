@@ -1,0 +1,172 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: neoapply_db
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-neoapply_development}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - neoapply_network
+
+  # Mailcatcher for Development Email Testing
+  mailcatcher:
+    image: sj26/mailcatcher:latest
+    container_name: neoapply_mailcatcher
+    ports:
+      - "1080:1080"  # Web interface
+      - "1025:1025"  # SMTP port
+    networks:
+      - neoapply_network
+
+  # Rails Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: neoapply_backend
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-neoapply_development}
+      RAILS_ENV: ${RAILS_ENV:-development}
+      RAILS_MAX_THREADS: ${RAILS_MAX_THREADS:-5}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-development-secret-key-change-in-production}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      HONEYBADGER_API_KEY: ${HONEYBADGER_API_KEY}
+      MAILER_FROM: ${MAILER_FROM:-noreply@neoapply.local}
+      APP_HOST: backend:3000
+      BACKEND_HOST: http://backend:3000
+      SMTP_HOST: mailcatcher
+      SMTP_PORT: 1025
+      ONLYOFFICE_URL: ${ONLYOFFICE_URL:-http://onlyoffice}
+      ONLYOFFICE_PUBLIC_URL: ${ONLYOFFICE_PUBLIC_URL:-http://localhost:8080}
+      ONLYOFFICE_JWT_SECRET: ${ONLYOFFICE_JWT_SECRET:-}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - bundle_cache:/usr/local/bundle
+      - rails_storage:/app/storage
+      - rails_tmp:/app/tmp
+    depends_on:
+      db:
+        condition: service_healthy
+      mailcatcher:
+        condition: service_started
+    networks:
+      - neoapply_network
+    stdin_open: true
+    tty: true
+
+  # Background worker for Solid Queue
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: neoapply_worker
+    command: bin/rails solid_queue:start
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-neoapply_development}
+      RAILS_ENV: ${RAILS_ENV:-development}
+      RAILS_MAX_THREADS: ${RAILS_MAX_THREADS:-5}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-development-secret-key-change-in-production}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      HONEYBADGER_API_KEY: ${HONEYBADGER_API_KEY}
+      MAILER_FROM: ${MAILER_FROM:-noreply@neoapply.local}
+      APP_HOST: backend:3000
+      BACKEND_HOST: http://backend:3000
+      SMTP_HOST: mailcatcher
+      SMTP_PORT: 1025
+      ONLYOFFICE_URL: ${ONLYOFFICE_URL:-http://onlyoffice}
+      ONLYOFFICE_PUBLIC_URL: ${ONLYOFFICE_PUBLIC_URL:-http://localhost:8080}
+      ONLYOFFICE_JWT_SECRET: ${ONLYOFFICE_JWT_SECRET:-}
+    volumes:
+      - ./backend:/app
+      - bundle_cache:/usr/local/bundle
+      - rails_storage:/app/storage
+      - rails_tmp:/app/tmp
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - neoapply_network
+    restart: unless-stopped
+
+  # Vue.js Frontend SPA
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: neoapply_frontend
+    command: npm run dev -- --host 0.0.0.0
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000/api/v1}
+      VITE_ONLYOFFICE_URL: ${VITE_ONLYOFFICE_URL:-http://localhost:8080}
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - neoapply_network
+    stdin_open: true
+    tty: true
+
+  # OnlyOffice Document Server
+  onlyoffice:
+    image: onlyoffice/documentserver:latest
+    container_name: neoapply_onlyoffice
+    environment:
+      - JWT_ENABLED=false
+      - JWT_SECRET=${ONLYOFFICE_JWT_SECRET:-}
+      # Allow OnlyOffice to download files from private IPs (development only!)
+      - WOPI_ENABLED=true
+      - ALLOW_PRIVATE_IP_ADDRESS=true
+      - ALLOW_META_IP_ADDRESS=true
+    ports:
+      - "8080:80"
+    volumes:
+      - onlyoffice_data:/var/www/onlyoffice/Data
+      - onlyoffice_log:/var/log/onlyoffice
+      - onlyoffice_fonts:/usr/share/fonts/truetype/custom
+      - onlyoffice_forgotten:/var/lib/onlyoffice/documentserver/App_Data/cache/files/forgotten
+      - ./frontend/public/onlyoffice-plugins:/var/www/onlyoffice/documentserver/sdkjs-plugins/custom
+    networks:
+      - neoapply_network
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:
+  bundle_cache:
+  rails_storage:
+  rails_tmp:
+  onlyoffice_data:
+  onlyoffice_log:
+  onlyoffice_fonts:
+  onlyoffice_forgotten:
+
+networks:
+  neoapply_network:
+    driver: bridge

@@ -1,0 +1,386 @@
+/* NeoApply autofill panel styles */
+
+/* Main panel container */
+.neoapply-panel {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  width: 360px;
+  max-height: calc(100vh - 100px);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  z-index: 999999;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-size: 14px;
+  color: #1a1a1a;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Panel header */
+.neoapply-panel-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.neoapply-panel-title {
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.neoapply-panel-logo {
+  width: 24px;
+  height: 24px;
+  background: white;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #667eea;
+  font-size: 14px;
+}
+
+.neoapply-panel-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.neoapply-panel-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Panel body */
+.neoapply-panel-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Section styles */
+.neoapply-section {
+  margin-bottom: 24px;
+}
+
+.neoapply-section:last-child {
+  margin-bottom: 0;
+}
+
+.neoapply-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 12px 0;
+}
+
+/* Button styles */
+.neoapply-btn {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.neoapply-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.neoapply-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.neoapply-btn-primary:active {
+  transform: translateY(0);
+}
+
+.neoapply-btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+.neoapply-btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+.neoapply-btn-success {
+  background: #10b981;
+  color: white;
+}
+
+.neoapply-btn-success:hover {
+  background: #059669;
+}
+
+.neoapply-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.neoapply-btn + .neoapply-btn {
+  margin-top: 8px;
+}
+
+/* Status messages */
+.neoapply-status {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.neoapply-status-success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.neoapply-status-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.neoapply-status-warning {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.neoapply-status-info {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+/* Resume selector */
+.neoapply-resume-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.neoapply-resume-select:hover {
+  border-color: #667eea;
+}
+
+.neoapply-resume-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Field mapping display */
+.neoapply-fields-detected {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 12px;
+}
+
+.neoapply-field-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.neoapply-field-name {
+  color: #6b7280;
+}
+
+.neoapply-field-status {
+  font-weight: 500;
+}
+
+.neoapply-field-status.filled {
+  color: #10b981;
+}
+
+.neoapply-field-status.empty {
+  color: #f59e0b;
+}
+
+/* Tailored answers */
+.neoapply-suggestion {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.neoapply-suggestion-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.neoapply-suggestion-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #374151;
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+}
+
+.neoapply-suggestion-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.neoapply-btn-small {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+  flex: 1;
+}
+
+/* Loading spinner */
+.neoapply-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: neoapply-spin 0.6s linear infinite;
+}
+
+@keyframes neoapply-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Minimized state */
+.neoapply-panel.minimized {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  top: auto;
+  bottom: 20px;
+  right: 20px;
+}
+
+.neoapply-panel.minimized .neoapply-panel-header {
+  padding: 18px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.neoapply-panel.minimized .neoapply-panel-title {
+  display: none;
+}
+
+.neoapply-panel.minimized .neoapply-panel-body {
+  display: none;
+}
+
+/* Draggable handle */
+.neoapply-panel-header {
+  cursor: move;
+  user-select: none;
+}
+
+/* Highlight file input helper */
+.neoapply-file-highlight {
+  position: relative;
+}
+
+.neoapply-file-highlight::after {
+  content: '← Click here to attach your resume';
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 12px;
+  background: #667eea;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: neoapply-pulse 2s infinite;
+}
+
+@keyframes neoapply-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .neoapply-panel {
+    width: calc(100vw - 40px);
+    right: 20px;
+  }
+}
+
+/* Scrollbar styles */
+.neoapply-panel-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.neoapply-panel-body::-webkit-scrollbar-track {
+  background: #f9fafb;
+}
+
+.neoapply-panel-body::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.neoapply-panel-body::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}

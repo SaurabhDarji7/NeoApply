@@ -1,0 +1,34 @@
+# Git
+.git
+.gitignore
+
+# Environment
+.env
+.env.*
+
+# Logs
+log/*
+tmp/*
+*.log
+
+# Test files
+spec/
+test/
+coverage/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Documentation
+README.md
+doc/
+
+# Dependencies (will be installed in container)
+vendor/bundle
+
+# Storage
+storage/*
+public/uploads

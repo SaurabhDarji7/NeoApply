@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width"/>
+  <style type="text/css">
+    /* Foundation for Emails base styles */
+    body, html, .body {
+      background: #f3f4f6 !important;
+    }
+    .container {
+      background: #ffffff;
+      border-radius: 8px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      color: #1f2937;
+      font-weight: 600;
+    }
+    p {
+      color: #4b5563;
+      line-height: 1.6;
+    }
+    .button {
+      background: #3b82f6;
+      border-radius: 6px;
+      color: #ffffff;
+      display: inline-block;
+      font-weight: 600;
+      padding: 12px 24px;
+      text-decoration: none;
+    }
+    .button:hover {
+      background: #2563eb;
+    }
+    .otp-code {
+      background: #f3f4f6;
+      border: 2px dashed #3b82f6;
+      border-radius: 8px;
+      font-size: 32px;
+      font-weight: bold;
+      letter-spacing: 8px;
+      padding: 20px;
+      text-align: center;
+      color: #1f2937;
+      font-family: 'Courier New', monospace;
+    }
+    .footer {
+      color: #6b7280;
+      font-size: 14px;
+      text-align: center;
+      padding: 20px 0;
+    }
+    .brand {
+      color: #3b82f6;
+      font-weight: 700;
+      font-size: 24px;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <container>
+    <row>
+      <columns>
+        <spacer size="20"></spacer>
+        <center>
+          <h1 class="brand">NeoApply</h1>
+        </center>
+        <spacer size="20"></spacer>
+      </columns>
+    </row>
+    <%= yield %>
+    <row>
+      <columns>
+        <spacer size="20"></spacer>
+        <center>
+          <p class="footer">
+            &copy; <%= Time.current.year %> NeoApply. All rights reserved.<br>
+            This is an automated email. Please do not reply.
+          </p>
+        </center>
+      </columns>
+    </row>
+  </container>
+</body>
+</html>

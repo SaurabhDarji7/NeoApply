@@ -1,0 +1,29 @@
+{
+  "name": "Template Helper",
+  "guid": "asc.{template-helper-plugin-guid-001}",
+  "version": "1.0.0",
+  "variations": [
+    {
+      "description": "Insert tokens and create skill zones",
+      "url": "index.html",
+      "icons": [],
+      "icons2": [],
+      "isViewer": false,
+      "EditorsSupport": ["word"],
+      "isVisual": true,
+      "isModal": false,
+      "isInsideMode": false,
+      "initDataType": "none",
+      "initData": "",
+      "isUpdateOleOnResize": false,
+      "buttons": [
+        {
+          "text": "Template Helper",
+          "primary": true
+        }
+      ],
+      "size": [400, 300],
+      "initOnSelectionChanged": true
+    }
+  ]
+}
