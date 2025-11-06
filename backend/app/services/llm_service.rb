@@ -2,17 +2,20 @@
 
 class LLMService
   def self.parse_resume(text)
-    parse(:resume, text)
+    resume_parser.parse(text)
   end
 
   def self.parse_job_description(text)
-    parse(:job_description, text)
+    job_description_parser.parse(text)
   end
 
   private
 
-  def self.parse(type, text)
-    parser = LLM::ParserRegistry.get(type)
-    parser.parse(text)
+  def self.resume_parser
+    @resume_parser ||= LLM::ResumeParser.new
+  end
+
+  def self.job_description_parser
+    @job_description_parser ||= LLM::JobDescriptionParser.new
   end
 end
