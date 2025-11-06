@@ -58,6 +58,34 @@ class User < ApplicationRecord
     clear_otp!
   end
 
+  # Onboarding methods
+
+  # Check if user has completed onboarding
+  def onboarding_completed?
+    onboarding_completed_at.present?
+  end
+
+  # Complete onboarding
+  def complete_onboarding!
+    update!(onboarding_completed_at: Time.current)
+  end
+
+  # Update current onboarding step
+  # @param step [Integer] The step number (1-4)
+  def update_onboarding_step!(step)
+    update!(onboarding_current_step: step)
+  end
+
+  # Mark that user has uploaded their first resume
+  def mark_resume_uploaded!
+    update!(has_uploaded_resume: true)
+  end
+
+  # Check if user can access job descriptions (requires resume upload)
+  def can_access_jobs?
+    has_uploaded_resume?
+  end
+
   private
 
   # Create default autofill profile when user signs up

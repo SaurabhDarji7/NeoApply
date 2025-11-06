@@ -9,6 +9,7 @@ import ResumeDetailView from '../views/ResumeDetailView.vue'
 import JobDetailView from '../views/JobDetailView.vue'
 import VerifyEmailView from '../views/VerifyEmailView.vue'
 import TemplatesView from '../views/TemplatesView.vue'
+import OnboardingView from '../views/OnboardingView.vue'
 
 const routes = [
   {
@@ -33,6 +34,12 @@ const routes = [
     name: 'Register',
     component: RegisterView,
     meta: { requiresGuest: true }
+  },
+  {
+    path: '/onboarding',
+    name: 'Onboarding',
+    component: OnboardingView,
+    meta: { requiresAuth: true }
   },
   {
     path: '/dashboard',
@@ -78,7 +85,7 @@ const router = createRouter({
 })
 
 // Navigation guards
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 
   if (to.meta.requiresAuth && !authStore.isLoggedIn) {
@@ -87,6 +94,16 @@ router.beforeEach((to, from, next) => {
   } else if (to.meta.requiresGuest && authStore.isLoggedIn) {
     // Redirect to dashboard if route is for guests only and user is logged in
     next('/dashboard')
+  } else if (to.meta.requiresAuth && authStore.isLoggedIn) {
+    // Check if user needs onboarding (unless they're already going to onboarding)
+    if (authStore.needsOnboarding && to.path !== '/onboarding') {
+      next('/onboarding')
+    } else if (!authStore.needsOnboarding && to.path === '/onboarding') {
+      // If user completed onboarding but tries to access onboarding page, redirect to dashboard
+      next('/dashboard')
+    } else {
+      next()
+    }
   } else {
     next()
   }

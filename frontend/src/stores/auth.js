@@ -13,7 +13,9 @@ export const useAuthStore = defineStore('auth', {
 
   getters: {
     isLoggedIn: (state) => state.isAuthenticated && !!state.token,
-    currentUser: (state) => state.user
+    currentUser: (state) => state.user,
+    needsOnboarding: (state) => state.user && !state.user.onboarding_completed,
+    hasUploadedResume: (state) => state.user?.has_uploaded_resume || false
   },
 
   actions: {
@@ -60,7 +62,13 @@ export const useAuthStore = defineStore('auth', {
         const response = await authService.login(credentials)
         const data = response.data?.data
         this.setAuth(data.user, data.token)
-        router.push('/dashboard')
+
+        // Check if user needs onboarding
+        if (data.user.onboarding_completed) {
+          router.push('/dashboard')
+        } else {
+          router.push('/onboarding')
+        }
       } catch (error) {
         this.error = error.response?.data?.error?.message || 'Login failed'
         throw error
@@ -108,6 +116,30 @@ export const useAuthStore = defineStore('auth', {
       this.token = null
       this.isAuthenticated = false
       localStorage.removeItem('jwt_token')
+    },
+
+    async updateOnboardingStep(step) {
+      try {
+        await authService.updateOnboardingStep(step)
+        if (this.user) {
+          this.user.onboarding_current_step = step
+        }
+      } catch (error) {
+        console.error('Failed to update onboarding step:', error)
+        throw error
+      }
+    },
+
+    async completeOnboarding() {
+      try {
+        await authService.completeOnboarding()
+        if (this.user) {
+          this.user.onboarding_completed = true
+        }
+      } catch (error) {
+        console.error('Failed to complete onboarding:', error)
+        throw error
+      }
     }
   }
 })
