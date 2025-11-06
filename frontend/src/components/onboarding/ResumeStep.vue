@@ -109,7 +109,7 @@
 </template>
 
 <script>
-import { resumeService } from '@/services/resumeService'
+import resumeService from '@/services/resumeService'
 import FeatureLoadingState from '../common/FeatureLoadingState.vue'
 import FileUpload from '../common/FileUpload.vue'
 import Alert from '../common/Alert.vue'
@@ -145,7 +145,7 @@ export default {
         formData.append('resume[file]', file)
         formData.append('resume[name]', file.name.replace('.docx', ''))
 
-        const response = await resumeService.uploadResume(formData)
+        const response = await resumeService.upload(formData)
         this.uploadedResumeId = response.data.id
 
         this.uploading = false
@@ -173,12 +173,12 @@ export default {
         this.progress = Math.min(40 + pollCount * 5, 95)
 
         try {
-          const statusResponse = await resumeService.getResumeStatus(this.uploadedResumeId)
+          const statusResponse = await resumeService.getStatus(this.uploadedResumeId)
           const status = statusResponse.data.status
 
           if (status === 'parsed') {
             // Fetch full resume data
-            const resumeResponse = await resumeService.getResume(this.uploadedResumeId)
+            const resumeResponse = await resumeService.getById(this.uploadedResumeId)
             this.resumeData = resumeResponse.data.parsed_data
 
             this.parsing = false
